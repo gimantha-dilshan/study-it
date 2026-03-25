@@ -42,6 +42,17 @@ npm start
 1. Enter your WhatsApp phone number (with country code) when prompted.
 2. Link the provided **Pair Code** on your phone (WhatsApp -> Settings -> Linked Devices -> Link with phone number).
 
+## Admin Commands 🛡️
+You can control the bot remotely by setting your phone number in the `.env` file:
+```env
+ADMIN_NUMBER=947xxxxxxxx
+```
+*Note: You can use your phone number or your WhatsApp LID.*
+
+### Available Commands (Admin Only):
+- **`.stats`**: View total users and message statistics.
+- **`.broadcast [message]`**: Send a global announcement to all users who have messaged the bot.
+
 ## Contributing
 Feel free to open issues or pull requests to improve the bot's features!
 
