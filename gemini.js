@@ -1,5 +1,6 @@
 import { GoogleGenAI } from '@google/genai';
 import dotenv from 'dotenv';
+import { getChatHistory, saveMessage } from './database.js';
 
 dotenv.config();
 
@@ -7,42 +8,12 @@ const client = new GoogleGenAI({
     apiKey: process.env.GEMINI_API_KEY,
 });
 
-// Using a more stable model by default. 
-// gemini-2.0-flash is fast, free-tier friendly, and very stable.
 const MODEL_NAME = 'gemini-2.5-flash-lite';
-
-// Simple in-memory storage for conversation history
-// In a production app, you'd use a database.
-const historyMap = new Map();
-
-/**
- * Gets or initializes the history for a specific user
- * @param {string} jid WhatsApp ID
- * @returns {Array} Array of message objects
- */
-function getHistory(jid) {
-    if (!historyMap.has(jid)) {
-        historyMap.set(jid, []);
-    }
-    return historyMap.get(jid);
-}
-
-/**
- * Adds a message to the history and trims it to keep context short
- */
-function addToHistory(jid, role, text) {
-    const history = getHistory(jid);
-    history.push({ role, parts: [{ text }] });
-
-    // Keep only the last 10 messages to avoid hitting token limits
-    if (history.length > 10) {
-        history.shift();
-    }
-}
 
 export async function askGemini(jid, prompt, mimes = []) {
     try {
-        const history = getHistory(jid);
+        // Retrieve history from database
+        const history = await getChatHistory(jid, 10);
 
         // Prepare parts for the current message
         const currentParts = [{ text: prompt }];
@@ -57,8 +28,6 @@ export async function askGemini(jid, prompt, mimes = []) {
             });
         });
 
-        // The @google/genai SDK uses client.models.generateContent
-        // We pass the history + the current user message
         const contents = [
             ...history,
             {
@@ -78,9 +47,9 @@ export async function askGemini(jid, prompt, mimes = []) {
 
         const responseText = result.text;
 
-        // Save to history after successful response
-        addToHistory(jid, 'user', prompt);
-        addToHistory(jid, 'model', responseText);
+        // Save to database
+        await saveMessage(jid, 'user', prompt);
+        await saveMessage(jid, 'model', responseText);
 
         return responseText;
     } catch (error) {

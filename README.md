@@ -11,6 +11,7 @@ Study-It is an educational WhatsApp bot powered by **Gemini 2.0 Flash Lite**. It
 ## Tech Stack
 - **Framework**: [Baileys](https://baileys.wiki) (WhatsApp Web API)
 - **AI**: [Google Gemini SDK](https://github.com/google-gemini/generative-ai-js) (@google/genai)
+- **Database**: SQLite (via `sqlite3` and `sqlite`)
 - **Language**: Node.js (ES Modules)
 
 ## Getting Started

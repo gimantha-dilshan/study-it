@@ -10,6 +10,7 @@ import pino from 'pino';
 import fs from 'fs';
 import readline from 'readline';
 import { askGemini } from './gemini.js';
+import { initDB, isUserSeen, markUserAsSeen, clearChatHistory, resetUserStatus } from './database.js';
 
 const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
 const question = (text) => new Promise((resolve) => rl.question(text, resolve));
@@ -25,10 +26,8 @@ Here’s what I can do for you:
 
 Ready to start? Just send me a message or a photo of your assignment! 🚀`;
 
-// Track users seen in this session to send welcome message only once
-const seenUsers = new Set();
-
 async function connectToWhatsApp() {
+    await initDB(); // Initialize the database
     const { state, saveCreds } = await useMultiFileAuthState('auth_info_baileys');
     const { version, isLatest } = await fetchLatestBaileysVersion();
     console.log(`Using WA version: ${version.join('.')}, isLatest: ${isLatest}`);
@@ -87,10 +86,10 @@ async function connectToWhatsApp() {
         const textMessage = msg.message.conversation || msg.message.extendedTextMessage?.text;
         const imageMessage = msg.message.imageMessage;
 
-        // Send welcome message if it's the first time seeing this user in this session
-        if (!seenUsers.has(remoteJid)) {
+        // Send welcome message if it's the first time seeing this user
+        if (!(await isUserSeen(remoteJid))) {
             await socket.sendMessage(remoteJid, { text: WELCOME_MESSAGE });
-            seenUsers.add(remoteJid);
+            await markUserAsSeen(remoteJid);
             return; // Only send welcome message on first interaction, don't trigger AI yet
         }
 
@@ -111,6 +110,20 @@ async function connectToWhatsApp() {
                 await socket.sendMessage(remoteJid, { text: aiResponse }, { quoted: msg });
 
             } else if (textMessage) {
+                // Handle custom commands
+                if (textMessage.toLowerCase() === '.clear') {
+                    await clearChatHistory(remoteJid);
+                    await socket.sendMessage(remoteJid, { text: "🧹 Your chat history has been cleared!" }, { quoted: msg });
+                    return;
+                }
+
+                if (textMessage.toLowerCase() === '.reset') {
+                    await resetUserStatus(remoteJid);
+                    await clearChatHistory(remoteJid);
+                    await socket.sendMessage(remoteJid, { text: "🔄 Bot has been reset for you. Send a message to see the welcome screen again!" }, { quoted: msg });
+                    return;
+                }
+
                 console.log(`Received message from ${remoteJid}: ${textMessage}`);
                 await socket.readMessages([msg.key]);
                 
