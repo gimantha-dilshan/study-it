@@ -9,6 +9,7 @@ auth_info_baileys/
 
 # Databases
 *.db
+database.json
 
 # Logs
 npm-debug.log*
