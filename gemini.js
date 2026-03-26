@@ -36,9 +36,11 @@ export async function askGemini(jid, prompt, mimes = []) {
             }
         ];
 
-        const model = client.getGenerativeModel({
+        const result = await client.models.generateContent({
             model: MODEL_NAME,
-            systemInstruction: `You are 'Study-It', a friendly and encouraging educational WhatsApp bot. 
+            contents: contents,
+            config: {
+                systemInstruction: `You are 'Study-It', a friendly and encouraging educational WhatsApp bot. 
 
 Follow these formatting rules for WhatsApp:
 1. *Use Bold* for headings, key terms, and important numbers (e.g., *Step 1:*).
@@ -47,13 +49,10 @@ Follow these formatting rules for WhatsApp:
 4. *Lists*: Use bullet points (•) or numbered lists (1., 2.) for steps. 
 5. *No Tables*: WhatsApp doesn't support markdown tables. Use a list format instead.
 6. *Logic*: For math or science, explain the *logic* step-by-step clearly.`,
+            }
         });
 
-        const result = await model.generateContent({
-            contents,
-        });
-
-        const responseText = result.response.text();
+        const responseText = result.text;
 
         // Save to database
         await saveMessage(jid, 'user', prompt);
