@@ -16,7 +16,7 @@
 - **🧠 Logical Explanations**: It doesn't just give answers; it breaks down the "why" and "how" behind every solution to ensure deep understanding.
 - **⚖️ Smart Quota System**:
   - **Free Tier**: 5 AI messages per day.
-  - **Registered Tier**: 50 AI messages per day (Connects to the [Registration Portal](https://studyit-register.vercel.app/)).
+  - **Registered Tier**: 100 AI messages per day (Connects to the [Registration Portal](https://studyit-register.vercel.app/)).
 - **📱 Seamless Connection**: Connect your WhatsApp using a simple **Pairing Code**—no QR scanning required for most setups.
 - **🛡️ Admin Dashboard**: Remotely monitor bot performance and broadcast announcements to all users.
 

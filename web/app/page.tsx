@@ -57,7 +57,7 @@ export default function RegistrationPage() {
       if (updateError) throw updateError;
 
       setStatus("success");
-      setMessage("Your daily limit has been increased to 50 messages! 🚀");
+      setMessage("Your daily limit has been increased to 100 messages! Now you can continue using Study-It on Whatsapp 🚀");
     } catch (err: any) {
       console.error(err);
       setStatus("error");
@@ -74,15 +74,15 @@ export default function RegistrationPage() {
         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-600/20 rounded-full blur-[120px] animate-mesh" />
         <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-600/20 rounded-full blur-[120px] animate-mesh animate-pulse-slow" />
         <div className="absolute top-[20%] right-[10%] w-[30%] h-[30%] bg-blue-600/10 rounded-full blur-[100px] animate-mesh" style={{ animationDelay: "-5s" }} />
-        
+
         {/* Subtle Grid Overlay */}
-        <div className="absolute inset-0 opacity-[0.03] pointer-events-none" 
-             style={{ backgroundImage: "linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)", backgroundSize: "60px 60px" }} />
+        <div className="absolute inset-0 opacity-[0.03] pointer-events-none"
+          style={{ backgroundImage: "linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)", backgroundSize: "60px 60px" }} />
       </div>
 
       {/* Content Container */}
       <div className="relative z-10 w-full max-w-5xl grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-        
+
         {/* Left Side: Brand & Info */}
         <div className="space-y-8 text-center lg:text-left">
           <div className="space-y-4">
@@ -97,11 +97,11 @@ export default function RegistrationPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="glass-card flex items-start gap-4">
               <div className="w-10 h-10 rounded-full bg-indigo-500/10 flex items-center justify-center shrink-0 border border-indigo-500/20">
-                <span className="text-indigo-400 font-bold">50</span>
+                <span className="text-indigo-400 font-bold">100</span>
               </div>
               <div className="text-left">
                 <h3 className="font-semibold text-white">Daily Messages</h3>
-                <p className="text-sm text-gray-500">Increased from 5 to 50.</p>
+                <p className="text-sm text-gray-500">Increased from 5 to 100.</p>
               </div>
             </div>
             <div className="glass-card flex items-start gap-4">
@@ -119,7 +119,7 @@ export default function RegistrationPage() {
         {/* Right Side: Registration Form */}
         <div className="relative group">
           <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-[2.5rem] blur opacity-25 group-hover:opacity-40 transition duration-1000 group-hover:duration-200"></div>
-          
+
           <div className="relative glass rounded-[2rem] p-8 md:p-10 space-y-8 animate-float">
             {status === "success" ? (
               <div className="text-center space-y-6 py-10">
@@ -148,12 +148,12 @@ export default function RegistrationPage() {
 
                 <div className="space-y-5">
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-400 ml-1">WhatsApp ID</label>
+                    <label className="text-sm font-medium text-gray-400 ml-1">WhatsApp Number</label>
                     <input
                       type="text"
                       required
                       placeholder="e.g. 947xxxxxxxx"
-                      className="w-full bg-white/[0.03] border border-white/10 rounded-2xl px-6 py-4 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all text-white placeholder:text-gray-700"
+                      className="w-full bg-white/[0.03] border border-white/10 rounded-2xl px-6 py-4 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all text-white placeholder:text-gray-500"
                       value={whatsappId}
                       onChange={(e) => setWhatsappId(e.target.value)}
                     />
@@ -165,7 +165,7 @@ export default function RegistrationPage() {
                       type="email"
                       required
                       placeholder="alex@example.com"
-                      className="w-full bg-white/[0.03] border border-white/10 rounded-2xl px-6 py-4 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all text-white placeholder:text-gray-700"
+                      className="w-full bg-white/[0.03] border border-white/10 rounded-2xl px-6 py-4 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all text-white placeholder:text-gray-500"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                     />
@@ -192,7 +192,7 @@ export default function RegistrationPage() {
                 </button>
               </form>
             )}
-            
+
             <p className="text-center text-xs text-gray-600">
               By registering, you agree to our Study-It Terms of Service.
             </p>

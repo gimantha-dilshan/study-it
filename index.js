@@ -121,7 +121,7 @@ async function connectToWhatsApp() {
 
             // Define Limits
             const FREE_LIMIT = 5;
-            const REGISTERED_LIMIT = 50;
+            const REGISTERED_LIMIT = 100;
             const limit = isRegistered ? REGISTERED_LIMIT : FREE_LIMIT;
 
             // Admin bypass
