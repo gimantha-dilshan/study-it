@@ -1,21 +1,35 @@
+# Study-It WhatsApp Project Git Ignore
+
 # Dependency directories
 node_modules/
+web/node_modules/
 
-# Environment variables
+# Next.js
+web/.next/
+web/out/
+web/.vercel
+
+# Environment variables (SENSITIVE)
 .env
+web/.env.local
+.env.production
 
-# WhatsApp Session Info (contains sensitive tokens)
+# WhatsApp Session Info (SENSITIVE - keeps you logged in)
 auth_info_baileys/
 
-# Databases
+# Databases & Local Data
 *.db
 database.json
+auth_info/
 
 # Logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+.pnpm-debug.log*
 
 # OS related files
 .DS_Store
 Thumbs.db
+*.tsbuildinfo
+next-env.d.ts

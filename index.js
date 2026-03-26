@@ -1,7 +1,10 @@
-import { 
-    makeWASocket, 
-    useMultiFileAuthState, 
-    DisconnectReason, 
+import dotenv from 'dotenv';
+dotenv.config();
+
+import {
+    makeWASocket,
+    useMultiFileAuthState,
+    DisconnectReason,
     downloadContentFromMessage,
     fetchLatestBaileysVersion
 } from '@whiskeysockets/baileys';
@@ -10,10 +13,13 @@ import pino from 'pino';
 import fs from 'fs';
 import readline from 'readline';
 import { askGemini } from './gemini.js';
-import { 
-    initDB, 
-    isUserSeen, 
-    markUserAsSeen, 
+import {
+    initDB,
+    saveMessage,
+    isUserSeen,
+    markUserAsSeen,
+    getUserProfile,
+    incrementUsage,
     getAdminStats,
     getAllUsers
 } from './database.js';
@@ -49,7 +55,7 @@ async function connectToWhatsApp() {
 
     if (!socket.authState.creds.registered) {
         const phoneNumber = await question('Enter your WhatsApp number (with country code, e.g., 94771234567): ');
-        
+
         // Give the socket some time to initialize before requesting the code
         console.log('Waiting for socket to be ready for pairing code...');
         setTimeout(async () => {
@@ -71,9 +77,9 @@ async function connectToWhatsApp() {
         if (connection === 'close') {
             const statusCode = (lastDisconnect.error?.output?.statusCode || lastDisconnect.error?.code);
             const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
-            
+
             console.log(`Connection closed. Status code: ${statusCode}. Reconnecting: ${shouldReconnect}`);
-            
+
             if (shouldReconnect) {
                 // Add a small delay before reconnecting to avoid spamming
                 setTimeout(() => connectToWhatsApp(), 5000);
@@ -93,15 +99,44 @@ async function connectToWhatsApp() {
         const textMessage = msg.message.conversation || msg.message.extendedTextMessage?.text;
         const imageMessage = msg.message.imageMessage;
 
-        // Send welcome message if it's the first time seeing this user
-        if (!(await isUserSeen(remoteJid))) {
-            await socket.sendMessage(remoteJid, { text: WELCOME_MESSAGE });
-            await markUserAsSeen(remoteJid);
-            return; // Only send welcome message on first interaction, don't trigger AI yet
-        }
-
         try {
+            // PHONE DETECTION (For LID Support)
+            const altId = msg.key.remoteJidAlt || msg.key.participantAlt || "";
+            let detectedPhone = null;
+            if (altId.includes("@s.whatsapp.net")) {
+                detectedPhone = altId.split("@")[0];
+            }
+
+            // Send welcome message if it's the first time seeing this user
+            if (!(await isUserSeen(remoteJid))) {
+                await socket.sendMessage(remoteJid, { text: WELCOME_MESSAGE });
+                await markUserAsSeen(remoteJid, detectedPhone);
+                return;
+            }
+
+            // Check Quota and Registration Status
+            const userProfile = await getUserProfile(remoteJid);
+            const isRegistered = userProfile?.is_registered || false;
+            const currentUsage = userProfile?.daily_usage || 0;
+
+            // Define Limits
+            const FREE_LIMIT = 5;
+            const REGISTERED_LIMIT = 50;
+            const limit = isRegistered ? REGISTERED_LIMIT : FREE_LIMIT;
+
+            // Admin bypass
+            const isAdmin = remoteJid === ADMIN_NUMBER;
+
             if (imageMessage) {
+                // Quota check for images
+                if (!isAdmin && currentUsage >= limit) {
+                    const webUrl = "https://study-it-registration.vercel.app";
+                    await socket.sendMessage(remoteJid, {
+                        text: `⚠️ *Daily Limit Reached!* 🎓\n\nYou have used your *${limit}/${limit}* free messages for today.\n\n✨ *Want more?* Register for free on our website to get *${REGISTERED_LIMIT}* messages per day!\n\n🔗 *Register here:* ${webUrl}`
+                    }, { quoted: msg });
+                    return;
+                }
+
                 console.log(`Received image from ${remoteJid}`);
                 const stream = await downloadContentFromMessage(imageMessage, 'image');
                 let buffer = Buffer.from([]);
@@ -111,9 +146,11 @@ async function connectToWhatsApp() {
 
                 const base64Image = buffer.toString('base64');
                 const caption = imageMessage.caption || "Analyze this homework image.";
-                
+
                 await socket.sendMessage(remoteJid, { text: "Thinking about your image... 🧐" }, { quoted: msg });
                 const aiResponse = await askGemini(remoteJid, caption, [{ mimeType: 'image/jpeg', data: base64Image }]);
+
+                await incrementUsage(remoteJid);
                 await socket.sendMessage(remoteJid, { text: aiResponse }, { quoted: msg });
 
             } else if (textMessage) {
@@ -121,14 +158,14 @@ async function connectToWhatsApp() {
                 // LID Support (Baileys 7.0.0+): Check both the primary JID and the Alternate JID (Phone Number)
                 const remoteJidAlt = msg.key.remoteJidAlt;
                 const participantAlt = msg.key.participantAlt;
-                const isNumberMatch = 
-                    remoteJid.includes(ADMIN_NUMBER) || 
+                const isNumberMatch =
+                    remoteJid.includes(ADMIN_NUMBER) ||
                     (remoteJidAlt && remoteJidAlt.includes(ADMIN_NUMBER)) ||
                     (participantAlt && participantAlt.includes(ADMIN_NUMBER));
 
-                const isAdmin = isNumberMatch;
+                const effectivelyAdmin = isNumberMatch;
 
-                if (isAdmin) {
+                if (effectivelyAdmin) {
                     if (textMessage.toLowerCase() === '.stats') {
                         const stats = await getAdminStats();
                         await socket.sendMessage(remoteJid, { text: `📊 *Study-It Stats*\n\n👥 Total Users: ${stats.users}\n💬 Total Messages: ${stats.messages}` }, { quoted: msg });
@@ -153,25 +190,31 @@ async function connectToWhatsApp() {
                         return;
                     }
                 } else if (textMessage.startsWith('.')) {
-                    // For non-admin users, ignore any message starting with .
-                    // This prevents them from accidentally triggering AI with command-like text.
+                    return;
+                }
+
+                // Quota check for text AI
+                if (!effectivelyAdmin && currentUsage >= limit) {
+                    const webUrl = "https://study-it-registration.vercel.app";
+                    await socket.sendMessage(remoteJid, {
+                        text: `⚠️ *Daily Limit Reached!* 🎓\n\nYou have used your *${limit}/${limit}* free messages for today.\n\n✨ *Want more?* Register for free on our website to get *${REGISTERED_LIMIT}* messages per day!\n\n🔗 *Register here:* ${webUrl}`
+                    }, { quoted: msg });
                     return;
                 }
 
                 console.log(`Received message from ${remoteJid}: ${textMessage}`);
                 await socket.readMessages([msg.key]);
-                
-                // Show a simple "Typing" status
                 await socket.sendPresenceUpdate('composing', remoteJid);
-                
+
                 const aiResponse = await askGemini(remoteJid, textMessage);
-                
+
+                await incrementUsage(remoteJid);
                 await socket.sendPresenceUpdate('paused', remoteJid);
                 await socket.sendMessage(remoteJid, { text: aiResponse }, { quoted: msg });
             }
         } catch (error) {
             console.error('Error processing message:', error);
-            await socket.sendMessage(remoteJid, { text: "Ouch! Something went wrong while processing your request. Please try again later." }, { quoted: msg });
+            await socket.sendMessage(remoteJid, { text: "I'm temporarily unavailable. Please try again in 1 minute! 🧠💤" }, { quoted: msg });
         }
     });
 }

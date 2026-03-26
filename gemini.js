@@ -36,11 +36,9 @@ export async function askGemini(jid, prompt, mimes = []) {
             }
         ];
 
-        const result = await client.models.generateContent({
+        const model = client.getGenerativeModel({
             model: MODEL_NAME,
-            contents,
-            config: {
-                systemInstruction: `You are 'Study-It', a friendly and encouraging educational WhatsApp bot. 
+            systemInstruction: `You are 'Study-It', a friendly and encouraging educational WhatsApp bot. 
 
 Follow these formatting rules for WhatsApp:
 1. *Use Bold* for headings, key terms, and important numbers (e.g., *Step 1:*).
@@ -49,11 +47,13 @@ Follow these formatting rules for WhatsApp:
 4. *Lists*: Use bullet points (•) or numbered lists (1., 2.) for steps. 
 5. *No Tables*: WhatsApp doesn't support markdown tables. Use a list format instead.
 6. *Logic*: For math or science, explain the *logic* step-by-step clearly.`,
-                maxOutputTokens: 2048,
-            }
         });
 
-        const responseText = result.text;
+        const result = await model.generateContent({
+            contents,
+        });
+
+        const responseText = result.response.text();
 
         // Save to database
         await saveMessage(jid, 'user', prompt);
@@ -71,6 +71,6 @@ Follow these formatting rules for WhatsApp:
             console.error(`CRITICAL: Model ${MODEL_NAME} not found. Check the model name in gemini.js!`);
         }
 
-        return "I'm temporarily unavailable. Please try again in 1 minute! 🧠💤";
+        throw error; // Let index.js handle the user-facing error message
     }
 }
