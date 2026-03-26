@@ -53,7 +53,16 @@ SUPABASE_URL=your_supabase_project_url
 SUPABASE_KEY=your_supabase_anon_key
 ```
 
-### 3. Database Setup
+### 3. Web Portal Configuration (Next.js)
+Create a `.env.local` file inside the `web/` directory:
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
+```
+
+### 4. Database Setup
 Run the following SQL in your **Supabase SQL Editor** to create the required tables:
 
 ```sql
@@ -76,7 +85,7 @@ CREATE TABLE messages (
 );
 ```
 
-### 4. Installation
+### 5. Installation
 ```bash
 # Clone the repository
 git clone <your-repo-url>
