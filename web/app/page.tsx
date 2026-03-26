@@ -52,7 +52,7 @@ export default function RegistrationPage() {
       // Update user to registered
       const { error: updateError } = await supabase
         .from("users")
-        .update({ 
+        .update({
           is_registered: true,
           email: email
         })
@@ -61,7 +61,7 @@ export default function RegistrationPage() {
       if (updateError) throw updateError;
 
       setStatus("success");
-      setMessage("Registration successful! Your daily limit has been increased to 50 messages. 🎓✨");
+      setMessage("Registration successful! Your daily limit has been increased to 50 messages. Now you can continue using the bot on Whatsapp 🎓✨");
     } catch (err: any) {
       console.error(err);
       setStatus("error");
@@ -94,7 +94,7 @@ export default function RegistrationPage() {
             </div>
             <h2 className="text-2xl font-semibold text-white">All Set!</h2>
             <p className="text-gray-400">{message}</p>
-            <button 
+            <button
               onClick={() => setStatus("idle")}
               className="w-full py-3 bg-white/5 hover:bg-white/10 rounded-xl transition-all border border-white/10"
             >
@@ -105,7 +105,7 @@ export default function RegistrationPage() {
           <form onSubmit={handleRegister} className="space-y-6">
             <div className="space-y-2">
               <label className="text-xs font-semibold text-gray-500 uppercase tracking-widest px-1">WhatsApp Number</label>
-              <input 
+              <input
                 type="text"
                 required
                 placeholder="e.g. 947xxxxxxxx"
@@ -118,7 +118,7 @@ export default function RegistrationPage() {
 
             <div className="space-y-2">
               <label className="text-xs font-semibold text-gray-500 uppercase tracking-widest px-1">Email Address</label>
-              <input 
+              <input
                 type="email"
                 required
                 placeholder="alex@gmail.com"
@@ -134,7 +134,7 @@ export default function RegistrationPage() {
               </p>
             )}
 
-            <button 
+            <button
               type="submit"
               disabled={status === "loading"}
               className="w-full py-4 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold rounded-2xl transition-all shadow-lg shadow-indigo-600/20 active:scale-95"
