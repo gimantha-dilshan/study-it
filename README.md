@@ -1,4 +1,4 @@
-# Study-It WhatsApp Bot 🎓✨
+# Study-It V2 WhatsApp Bot 🎓✨
 
 [![Node.js Version](https://img.shields.io/badge/Node.js-v18+-green.svg)](https://nodejs.org/)
 [![AI-Powered](https://img.shields.io/badge/AI-Gemini%202.5%20Flash%20Lite-blue.svg)](https://aistudio.google.com/)
