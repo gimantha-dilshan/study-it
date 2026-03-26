@@ -130,7 +130,7 @@ async function connectToWhatsApp() {
             if (imageMessage) {
                 // Quota check for images
                 if (!isAdmin && currentUsage >= limit) {
-                    const webUrl = "https://study-it-registration.vercel.app";
+                    const webUrl = "https://studyit-register.vercel.app/";
                     await socket.sendMessage(remoteJid, {
                         text: `⚠️ *Daily Limit Reached!* 🎓\n\nYou have used your *${limit}/${limit}* free messages for today.\n\n✨ *Want more?* Register for free on our website to get *${REGISTERED_LIMIT}* messages per day!\n\n🔗 *Register here:* ${webUrl}`
                     }, { quoted: msg });
@@ -195,7 +195,7 @@ async function connectToWhatsApp() {
 
                 // Quota check for text AI
                 if (!effectivelyAdmin && currentUsage >= limit) {
-                    const webUrl = "https://study-it-registration.vercel.app";
+                    const webUrl = "https://studyit-register.vercel.app/";
                     await socket.sendMessage(remoteJid, {
                         text: `⚠️ *Daily Limit Reached!* 🎓\n\nYou have used your *${limit}/${limit}* free messages for today.\n\n✨ *Want more?* Register for free on our website to get *${REGISTERED_LIMIT}* messages per day!\n\n🔗 *Register here:* ${webUrl}`
                     }, { quoted: msg });
