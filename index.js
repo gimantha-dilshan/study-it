@@ -210,11 +210,17 @@ async function connectToWhatsApp() {
                 const base64Image = buffer.toString('base64');
                 const caption = imageMessage.caption || "Analyze this homework image.";
 
+                // Save user image message
+                await saveMessage(remoteJid, 'user', caption, 'image');
+
                 await socket.sendMessage(remoteJid, { text: "Thinking about your image... 🧐" }, { quoted: msg });
                 const aiResponse = await askGemini(remoteJid, caption, [{ mimeType: 'image/jpeg', data: base64Image }]);
 
                 await incrementUsage(remoteJid);
                 await socket.sendMessage(remoteJid, { text: aiResponse }, { quoted: msg });
+                
+                // Save AI response
+                await saveMessage(remoteJid, 'ai', aiResponse, 'text');
 
             } else if (audioMessage) {
                 // Quota check for audio
@@ -234,12 +240,19 @@ async function connectToWhatsApp() {
                 }
 
                 const base64Audio = buffer.toString('base64');
+                
+                // Save user audio message
+                await saveMessage(remoteJid, 'user', '[Audio Message]', 'audio');
+
                 await socket.sendMessage(remoteJid, { text: "Listening to your voice note... 👂" }, { quoted: msg });
                 
                 const aiResponse = await askGemini(remoteJid, "User sent a voice note. Listen and respond.", [{ mimeType: 'audio/ogg', data: base64Audio }]);
 
                 await incrementUsage(remoteJid);
                 await socket.sendMessage(remoteJid, { text: aiResponse }, { quoted: msg });
+
+                // Save AI response
+                await saveMessage(remoteJid, 'ai', aiResponse, 'text');
 
             } else if (documentMessage && documentMessage.mimetype === 'application/pdf') {
                 // Quota check for documents
@@ -261,11 +274,17 @@ async function connectToWhatsApp() {
                 const base64Pdf = buffer.toString('base64');
                 const caption = documentMessage.caption || "Analyze this PDF document.";
 
+                // Save user document message
+                await saveMessage(remoteJid, 'user', '[PDF Document]', 'document');
+
                 await socket.sendMessage(remoteJid, { text: "Reading your document... 📄" }, { quoted: msg });
                 const aiResponse = await askGemini(remoteJid, caption, [{ mimeType: 'application/pdf', data: base64Pdf }]);
 
                 await incrementUsage(remoteJid);
                 await socket.sendMessage(remoteJid, { text: aiResponse }, { quoted: msg });
+                
+                // Save AI response
+                await saveMessage(remoteJid, 'ai', aiResponse, 'text');
 
             } else if (textMessage) {
                 // COMMAND HANDLING (Admin Only)
@@ -320,11 +339,17 @@ async function connectToWhatsApp() {
                 await socket.readMessages([msg.key]);
                 await socket.sendPresenceUpdate('composing', remoteJid);
 
+                // Save user text message
+                await saveMessage(remoteJid, 'user', textMessage, 'text');
+
                 const aiResponse = await askGemini(remoteJid, textMessage);
 
                 await incrementUsage(remoteJid);
                 await socket.sendPresenceUpdate('paused', remoteJid);
                 await socket.sendMessage(remoteJid, { text: aiResponse }, { quoted: msg });
+
+                // Save AI response
+                await saveMessage(remoteJid, 'ai', aiResponse, 'text');
             }
         } catch (error) {
             console.error('Error processing message:', error);

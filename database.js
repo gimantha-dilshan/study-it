@@ -25,10 +25,10 @@ export async function initDB() {
 /**
  * Saves a message to the cloud database
  */
-export async function saveMessage(jid, role, content) {
+export async function saveMessage(jid, role, content, type = 'text') {
     const { error } = await supabase
         .from('messages')
-        .insert([{ jid, role, content }]);
+        .insert([{ jid, role, content, type }]);
     
     if (error) console.error('Error saving message to Supabase:', error.message);
 }
