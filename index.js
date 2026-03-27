@@ -61,10 +61,20 @@ async function startBroadcastListener(socket) {
                                     `------------------------------------------\n` +
                                     `_Thank you for choosing Study-It. Best of luck with your studies!_ 🚀`;
 
+            const imagePath = './announcement.jpg';
+            const hasImage = fs.existsSync(imagePath);
+
             let successCount = 0;
             for (const user of users) {
                 try {
-                    await socket.sendMessage(user, { text: officialMessage });
+                    if (hasImage) {
+                        await socket.sendMessage(user, { 
+                            image: fs.readFileSync(imagePath), 
+                            caption: officialMessage 
+                        });
+                    } else {
+                        await socket.sendMessage(user, { text: officialMessage });
+                    }
                     successCount++;
                     // Safe throttling to prevent WhatsApp bans
                     await sleep(500); 
