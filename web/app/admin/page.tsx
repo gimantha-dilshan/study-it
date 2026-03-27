@@ -14,7 +14,7 @@ export default function AdminDashboard() {
   const [passcode, setPasscode] = useState("");
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [error, setError] = useState("");
-  
+
   const [stats, setStats] = useState({
     totalUsers: 0,
     registeredUsers: 0,
@@ -25,10 +25,10 @@ export default function AdminDashboard() {
   const [broadcasts, setBroadcasts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("all");
-  
+
   const [broadcastMessage, setBroadcastMessage] = useState("");
   const [isBroadcasting, setIsBroadcasting] = useState(false);
-  const [toast, setToast] = useState<{message: string, type: 'success' | 'error'} | null>(null);
+  const [toast, setToast] = useState<{ message: string, type: 'success' | 'error' } | null>(null);
 
   const filteredUsers = filter === "all" ? users : users.filter(u => u.is_registered);
 
@@ -107,18 +107,22 @@ export default function AdminDashboard() {
 
       {toast && (
         <div className={`fixed top-8 left-1/2 -translate-x-1/2 z-[100] px-8 py-4 rounded-2xl border flex items-center gap-3 animate-slide-down shadow-2xl backdrop-blur-xl ${toast.type === 'success' ? 'bg-green-500/10 border-green-500/30 text-green-400' : 'bg-red-500/10 border-red-500/30 text-red-400'}`}>
-            <span className="font-bold">{toast.type === 'success' ? '✅' : '❌'} {toast.message}</span>
+          <span className="font-bold">{toast.type === 'success' ? '✅' : '❌'} {toast.message}</span>
         </div>
       )}
 
       <div className="relative z-10 max-w-7xl mx-auto space-y-10">
         <header className="flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-1">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(34,197,94,0.8)]" />
+              <span className="text-green-500 text-[10px] font-black uppercase tracking-[0.4em] drop-shadow-[0_0_5px_rgba(34,197,94,0.5)]">Live System Analysis</span>
+            </div>
             <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight glow-text leading-tight">Analytics</h1>
             <p className="text-gray-400 text-lg font-medium tracking-tight">Intelligence control center v2.5</p>
           </div>
           <div className="flex items-center gap-4 w-full md:w-auto">
-            <button onClick={fetchData} className="p-4 glass rounded-2xl border border-white/10 hover:bg-white/10 transition-all flex-1 md:flex-none flex justify-center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg></button>
+            <button onClick={fetchData} className="p-4 glass rounded-2xl border border-white/10 hover:bg-white/10 transition-all flex-1 md:flex-none flex justify-center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /><path d="M3 3v5h5" /><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16" /><path d="M16 16h5v5" /></svg></button>
             <button onClick={() => { sessionStorage.removeItem("studyit_admin_verified"); setIsAuthorized(false); }} className="px-8 py-4 bg-red-500/10 text-red-400 text-sm font-bold rounded-2xl border border-red-500/20 hover:bg-red-500/20 transition-all flex-1 md:flex-none">Logout</button>
           </div>
         </header>
@@ -130,77 +134,77 @@ export default function AdminDashboard() {
             { label: "AI Inquiries", val: stats.totalMessages, sub: `~${(stats.totalMessages / (stats.totalUsers || 1)).toFixed(1)}/user`, color: "text-blue-400" },
           ].map((item, i) => (
             <div key={i} className="glass rounded-[2rem] p-8 border border-white/10 flex flex-col justify-between h-44 hover:border-white/20 transition-all bg-white/[0.03] shadow-lg">
-                <p className="text-gray-500 text-sm font-bold uppercase tracking-widest">{item.label}</p>
-                <h2 className="text-5xl font-extrabold tracking-tight">{loading ? "..." : item.val}</h2>
-                <div className={`${item.color} text-sm font-bold`}>{item.sub}</div>
+              <p className="text-gray-500 text-sm font-bold uppercase tracking-widest">{item.label}</p>
+              <h2 className="text-5xl font-extrabold tracking-tight">{loading ? "..." : item.val}</h2>
+              <div className={`${item.color} text-sm font-bold`}>{item.sub}</div>
             </div>
           ))}
           <div className="glass rounded-[2rem] p-8 border border-white/10 flex items-center justify-center h-44 bg-white/[0.03] shadow-lg">
-             <div className="relative flex items-center justify-center">
-                <svg className="w-28 h-28 transform -rotate-90">
-                    <circle cx="56" cy="56" r="50" stroke="currentColor" strokeWidth="10" fill="transparent" className="text-white/5" />
-                    <circle cx="56" cy="56" r="50" stroke="currentColor" strokeWidth="10" fill="transparent" strokeDasharray={314} strokeDashoffset={314 - (314 * proPercentage) / 100} strokeLinecap="round" className="text-indigo-500 transition-all duration-1000" />
-                </svg>
-                <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-                    <span className="text-xl font-bold">{proPercentage.toFixed(0)}%</span>
-                    <span className="text-[10px] text-gray-500 font-bold uppercase tracking-tighter">Pro Split</span>
-                </div>
-             </div>
+            <div className="relative flex items-center justify-center">
+              <svg className="w-28 h-28 transform -rotate-90">
+                <circle cx="56" cy="56" r="50" stroke="currentColor" strokeWidth="10" fill="transparent" className="text-white/5" />
+                <circle cx="56" cy="56" r="50" stroke="currentColor" strokeWidth="10" fill="transparent" strokeDasharray={314} strokeDashoffset={314 - (314 * proPercentage) / 100} strokeLinecap="round" className="text-indigo-500 transition-all duration-1000" />
+              </svg>
+              <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+                <span className="text-xl font-bold">{proPercentage.toFixed(0)}%</span>
+                <span className="text-[10px] text-gray-500 font-bold uppercase tracking-tighter">Pro Split</span>
+              </div>
+            </div>
           </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            <div className="lg:col-span-8 space-y-6">
-                <div className="glass rounded-[2.5rem] p-8 md:p-10 border border-white/10 space-y-8 bg-white/[0.02] shadow-xl">
-                    <div className="space-y-1">
-                        <h3 className="text-3xl font-extrabold tracking-tight">Broadcast Center</h3>
-                        <p className="text-gray-500 font-medium text-sm">Send a message to all students (Sends with official image)</p>
-                    </div>
+          <div className="lg:col-span-8 space-y-6">
+            <div className="glass rounded-[2.5rem] p-8 md:p-10 border border-white/10 space-y-8 bg-white/[0.02] shadow-xl">
+              <div className="space-y-1">
+                <h3 className="text-3xl font-extrabold tracking-tight">Broadcast Center</h3>
+                <p className="text-gray-500 font-medium text-sm">Send a message to all students (Sends with official image)</p>
+              </div>
 
-                    <div className="space-y-6">
-                        <div className="flex flex-wrap gap-2">
-                            {templates.map((t) => (
-                                <button key={t.name} onClick={() => setBroadcastMessage(t.text)} className="px-5 py-2.5 bg-white/5 border border-white/10 rounded-xl text-xs font-bold hover:bg-indigo-600/20 hover:border-indigo-500/30 transition-all">{t.name}</button>
-                            ))}
-                        </div>
-                        <textarea 
-                            value={broadcastMessage} onChange={(e) => setBroadcastMessage(e.target.value)}
-                            placeholder="Type your official announcement..."
-                            className="w-full h-40 bg-white/[0.03] border border-white/10 rounded-[1.5rem] p-6 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all text-white resize-none font-medium text-lg leading-relaxed shadow-inner"
-                        />
-                        <div className="flex justify-end">
-                            <button 
-                                onClick={async () => {
-                                    if (!broadcastMessage.trim() || isBroadcasting) return;
-                                    setIsBroadcasting(true);
-                                    try {
-                                        const { error } = await supabase.from('broadcasts').insert([{ message: broadcastMessage }]);
-                                        if (error) throw error;
-                                        showToast("Broadcast queued successfully!", "success");
-                                        setBroadcastMessage(""); fetchData();
-                                    } catch (err: any) { showToast("Error: " + err.message, "error"); } finally { setIsBroadcasting(false); }
-                                }}
-                                disabled={!broadcastMessage.trim() || isBroadcasting}
-                                className="w-full md:w-auto px-10 py-5 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-bold rounded-2xl transition-all shadow-xl shadow-indigo-600/30 active:scale-95"
-                            >
-                                {isBroadcasting ? "Transmitting..." : "Send Global Broadcast"}
-                            </button>
-                        </div>
-                    </div>
+              <div className="space-y-6">
+                <div className="flex flex-wrap gap-2">
+                  {templates.map((t) => (
+                    <button key={t.name} onClick={() => setBroadcastMessage(t.text)} className="px-5 py-2.5 bg-white/5 border border-white/10 rounded-xl text-xs font-bold hover:bg-indigo-600/20 hover:border-indigo-500/30 transition-all">{t.name}</button>
+                  ))}
                 </div>
+                <textarea
+                  value={broadcastMessage} onChange={(e) => setBroadcastMessage(e.target.value)}
+                  placeholder="Type your official announcement..."
+                  className="w-full h-40 bg-white/[0.03] border border-white/10 rounded-[1.5rem] p-6 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all text-white resize-none font-medium text-lg leading-relaxed shadow-inner"
+                />
+                <div className="flex justify-end">
+                  <button
+                    onClick={async () => {
+                      if (!broadcastMessage.trim() || isBroadcasting) return;
+                      setIsBroadcasting(true);
+                      try {
+                        const { error } = await supabase.from('broadcasts').insert([{ message: broadcastMessage }]);
+                        if (error) throw error;
+                        showToast("Broadcast queued successfully!", "success");
+                        setBroadcastMessage(""); fetchData();
+                      } catch (err: any) { showToast("Error: " + err.message, "error"); } finally { setIsBroadcasting(false); }
+                    }}
+                    disabled={!broadcastMessage.trim() || isBroadcasting}
+                    className="w-full md:w-auto px-10 py-5 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-bold rounded-2xl transition-all shadow-xl shadow-indigo-600/30 active:scale-95"
+                  >
+                    {isBroadcasting ? "Transmitting..." : "Send Global Broadcast"}
+                  </button>
+                </div>
+              </div>
             </div>
+          </div>
 
-            <div className="lg:col-span-4 glass rounded-[2.5rem] p-8 border border-white/10 flex flex-col space-y-6 bg-white/[0.02] shadow-xl">
-                <h3 className="text-xl font-extrabold tracking-tight">Recent Broadcasts</h3>
-                <div className="space-y-4 overflow-y-auto max-h-[400px] pr-2 custom-scrollbar">
-                    {broadcasts.length === 0 ? (<div className="h-40 flex items-center justify-center text-gray-600 font-bold italic text-sm">No history found</div>) : broadcasts.map((b) => (
-                        <div key={b.id} className="p-4 bg-white/[0.03] border border-white/5 rounded-2xl space-y-2 hover:border-white/20 transition-all">
-                            <div className="flex justify-between items-center"><span className="text-[10px] font-bold text-indigo-400">{new Date(b.created_at).toLocaleDateString()}</span><span className={`px-2 py-0.5 rounded text-[8px] font-bold uppercase ${b.status === 'sent' ? 'bg-green-500/10 text-green-500' : 'bg-yellow-500/10 text-yellow-500'}`}>{b.status}</span></div>
-                            <p className="text-xs text-gray-400 font-medium leading-relaxed line-clamp-3">"{b.message}"</p>
-                        </div>
-                    ))}
+          <div className="lg:col-span-4 glass rounded-[2.5rem] p-8 border border-white/10 flex flex-col space-y-6 bg-white/[0.02] shadow-xl">
+            <h3 className="text-xl font-extrabold tracking-tight">Recent Broadcasts</h3>
+            <div className="space-y-4 overflow-y-auto max-h-[400px] pr-2 custom-scrollbar">
+              {broadcasts.length === 0 ? (<div className="h-40 flex items-center justify-center text-gray-600 font-bold italic text-sm">No history found</div>) : broadcasts.map((b) => (
+                <div key={b.id} className="p-4 bg-white/[0.03] border border-white/5 rounded-2xl space-y-2 hover:border-white/20 transition-all">
+                  <div className="flex justify-between items-center"><span className="text-[10px] font-bold text-indigo-400">{new Date(b.created_at).toLocaleDateString()}</span><span className={`px-2 py-0.5 rounded text-[8px] font-bold uppercase ${b.status === 'sent' ? 'bg-green-500/10 text-green-500' : 'bg-yellow-500/10 text-yellow-500'}`}>{b.status}</span></div>
+                  <p className="text-xs text-gray-400 font-medium leading-relaxed line-clamp-3">"{b.message}"</p>
                 </div>
+              ))}
             </div>
+          </div>
         </div>
 
         <div className="glass rounded-[3rem] overflow-hidden border border-white/10 shadow-xl bg-white/[0.01]">
@@ -225,7 +229,7 @@ export default function AdminDashboard() {
                       </td>
                       <td className="px-10 py-6"><span className={`px-4 py-1.5 text-[9px] font-bold uppercase rounded-full ${user.is_registered ? "bg-indigo-500/20 text-indigo-400 border border-indigo-500/30" : "bg-gray-500/10 text-gray-500 border border-white/10"}`}>{user.is_registered ? "PRO" : "FREE"}</span></td>
                       <td className="px-10 py-6"><div className="space-y-1.5"><div className="flex justify-between text-[11px] font-bold"><span className="text-gray-500">Usage</span><span className="text-white">{user.daily_usage}/{limit}</span></div><div className="w-32 h-1.5 bg-white/5 rounded-full overflow-hidden border border-white/10"><div className="h-full bg-indigo-500 transition-all duration-1000" style={{ width: `${usagePercent}%` }} /></div></div></td>
-                      <td className="px-10 py-6 hidden md:table-cell"><div className="text-white font-bold text-sm">{new Date(user.created_at).toLocaleDateString()}</div><div className="text-gray-600 text-[10px] font-bold mt-0.5">{new Date(user.created_at).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</div></td>
+                      <td className="px-10 py-6 hidden md:table-cell"><div className="text-white font-bold text-sm">{new Date(user.created_at).toLocaleDateString()}</div><div className="text-gray-600 text-[10px] font-bold mt-0.5">{new Date(user.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div></td>
                     </tr>
                   );
                 })}
