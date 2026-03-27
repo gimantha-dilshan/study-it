@@ -76,7 +76,7 @@ export default function AdminDashboard() {
       const registeredCount = usersData?.filter(u => u.is_registered).length || 0;
       const today = new Date().toISOString().split('T')[0];
       const newUsersToday = usersData?.filter(u => u.created_at?.startsWith(today)).length || 0;
-      const { count: messagesCount } = await supabase.from("messages").select("*", { count: "exact", head: true }).eq('role', 'user');
+      const { count: messagesCount } = await supabase.from("messages").select("*", { count: "exact", head: true }).eq('role', 'model');
       const { data: broadcastData } = await supabase.from("broadcasts").select("*").order('created_at', { ascending: false }).limit(5);
 
       setStats({ totalUsers: totalCount || 0, registeredUsers: registeredCount, totalMessages: messagesCount || 0, newUsersToday });
@@ -101,7 +101,7 @@ export default function AdminDashboard() {
                 image: messages.filter(m => m.type === 'image' && m.role === 'user').length,
                 audio: messages.filter(m => m.type === 'audio' && m.role === 'user').length,
                 document: messages.filter(m => m.type === 'document' && m.role === 'user').length,
-                total: messages.filter(m => m.role === 'user').length
+                total: messages.filter(m => m.role === 'model').length
             };
 
             // Activity by day (last 7 days)
