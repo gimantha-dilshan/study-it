@@ -220,7 +220,7 @@ async function connectToWhatsApp() {
                 await socket.sendMessage(remoteJid, { text: aiResponse }, { quoted: msg });
                 
                 // Save AI response
-                await saveMessage(remoteJid, 'ai', aiResponse, 'text');
+                await saveMessage(remoteJid, 'model', aiResponse, 'text');
 
             } else if (audioMessage) {
                 // Quota check for audio
@@ -252,7 +252,7 @@ async function connectToWhatsApp() {
                 await socket.sendMessage(remoteJid, { text: aiResponse }, { quoted: msg });
 
                 // Save AI response
-                await saveMessage(remoteJid, 'ai', aiResponse, 'text');
+                await saveMessage(remoteJid, 'model', aiResponse, 'text');
 
             } else if (documentMessage && documentMessage.mimetype === 'application/pdf') {
                 // Quota check for documents
@@ -284,7 +284,7 @@ async function connectToWhatsApp() {
                 await socket.sendMessage(remoteJid, { text: aiResponse }, { quoted: msg });
                 
                 // Save AI response
-                await saveMessage(remoteJid, 'ai', aiResponse, 'text');
+                await saveMessage(remoteJid, 'model', aiResponse, 'text');
 
             } else if (textMessage) {
                 // COMMAND HANDLING (Admin Only)
@@ -349,7 +349,7 @@ async function connectToWhatsApp() {
                 await socket.sendMessage(remoteJid, { text: aiResponse }, { quoted: msg });
 
                 // Save AI response
-                await saveMessage(remoteJid, 'ai', aiResponse, 'text');
+                await saveMessage(remoteJid, 'model', aiResponse, 'text');
             }
         } catch (error) {
             console.error('Error processing message:', error);

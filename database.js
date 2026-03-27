@@ -51,7 +51,7 @@ export async function getChatHistory(jid, limit = 10) {
 
     // Return in chronological order (Gemini expects history from oldest to newest)
     return data.reverse().map(m => ({
-        role: m.role,
+        role: m.role === 'ai' ? 'model' : m.role,
         parts: [{ text: m.content }]
     }));
 }

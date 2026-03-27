@@ -64,11 +64,6 @@ Follow these formatting rules strictly for every response:
         });
 
         const responseText = result.text;
-
-        // Save to database
-        await saveMessage(jid, 'user', prompt);
-        await saveMessage(jid, 'model', responseText);
-
         return responseText;
     } catch (error) {
         console.error(`Error with ${modelChoice}:`, error.message);
