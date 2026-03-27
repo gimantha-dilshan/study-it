@@ -63,10 +63,11 @@ export default function AdminDashboard() {
       
       const registeredCount = usersData?.filter(u => u.is_registered).length || 0;
 
-      // Fetch Message Count
+      // Fetch Message Count (AI Inquiries only)
       const { count: messagesCount } = await supabase
         .from("messages")
-        .select("*", { count: "exact", head: true });
+        .select("*", { count: "exact", head: true })
+        .eq("role", "user");
 
       setStats({
         totalUsers: totalCount || 0,
