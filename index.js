@@ -21,7 +21,8 @@ import {
     getUserProfile,
     incrementUsage,
     getAdminStats,
-    getAllUsers
+    getAllUsers,
+    supabase
 } from './database.js';
 
 const ADMIN_NUMBER = process.env.ADMIN_NUMBER;
@@ -38,6 +39,40 @@ Here’s what I can do for you:
 🧠 *Step-by-Step:* I don't just give answers, I explain how to solve them.
 
 Ready to start? Just send me a message or a photo of your assignment! 🚀`;
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+async function startBroadcastListener(socket) {
+    console.log('📡 Global Broadcast Listener initialized...');
+    
+    // Subscribe to new rows in 'broadcasts' table
+    supabase
+        .channel('broadcasts-realtime')
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'broadcasts' }, async (payload) => {
+            const { message, id } = payload.new;
+            console.log(`📢 Received new broadcast [ID: ${id}]: ${message}`);
+
+            const users = await getAllUsers();
+            console.log(`🚀 Transmitting broadcast to ${users.length} users...`);
+
+            let successCount = 0;
+            for (const user of users) {
+                try {
+                    await socket.sendMessage(user, { text: `📢 *Global Message from Study-It*\n\n${message}` });
+                    successCount++;
+                    // Safe throttling to prevent WhatsApp bans
+                    await sleep(500); 
+                } catch (err) {
+                    console.error(`Failed to broadcast to ${user}:`, err);
+                }
+            }
+
+            // Update status in DB
+            await supabase.from('broadcasts').update({ status: 'sent' }).eq('id', id);
+            console.log(`✅ Broadcast [ID: ${id}] completed! (${successCount}/${users.length} sent)`);
+        })
+        .subscribe();
+}
 
 async function connectToWhatsApp() {
     await initDB(); // Initialize the database
@@ -88,6 +123,7 @@ async function connectToWhatsApp() {
             }
         } else if (connection === 'open') {
             console.log('Successfully connected to WhatsApp!');
+            startBroadcastListener(socket);
         }
     });
 

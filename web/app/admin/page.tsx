@@ -24,6 +24,9 @@ export default function AdminDashboard() {
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("all");
+  const [broadcastMessage, setBroadcastMessage] = useState("");
+  const [isBroadcasting, setIsBroadcasting] = useState(false);
+  const [broadcastStatus, setBroadcastStatus] = useState("");
 
   const filteredUsers = filter === "all" ? users : users.filter(u => u.is_registered);
 
@@ -144,7 +147,7 @@ export default function AdminDashboard() {
             </button>
           </div>
         </header>
-
+        {/* Analytics Overview */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <div className="glass-card p-8 rounded-[2rem] border border-white/10">
             <p className="text-gray-500 text-sm font-bold uppercase tracking-wider">Active Users</p>
@@ -173,6 +176,68 @@ export default function AdminDashboard() {
                 </div>
              </div>
           </div>
+        </div>
+
+        {/* Global Broadcast Center */}
+        <div className="glass-card p-10 rounded-[3rem] border border-white/10 space-y-6 relative overflow-hidden group">
+            <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-all">
+                <svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"><path d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12s4.48 10 10 10 10-4.48 10-10z"/><path d="M12 18V6"/><path d="m8 10 4-4 4 4"/></svg>
+            </div>
+            
+            <div className="space-y-2 relative z-10">
+                <h3 className="text-3xl font-bold tracking-tight">Global Broadcast Center</h3>
+                <p className="text-gray-500 font-medium">Send a real-time message to all students on WhatsApp.</p>
+            </div>
+
+            <div className="space-y-4 relative z-10">
+                <textarea 
+                    value={broadcastMessage}
+                    onChange={(e) => setBroadcastMessage(e.target.value)}
+                    placeholder="Type your announcement here..."
+                    className="w-full h-32 bg-white/[0.03] border border-white/10 rounded-2xl p-6 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all text-white resize-none"
+                />
+                
+                <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+                    <div className="text-sm font-bold">
+                        {broadcastStatus && (
+                            <span className={broadcastStatus.includes("Error") ? "text-red-400" : "text-green-400"}>
+                                {broadcastStatus}
+                            </span>
+                        )}
+                    </div>
+                    <button 
+                        onClick={async () => {
+                            if (!broadcastMessage.trim() || isBroadcasting) return;
+                            setIsBroadcasting(true);
+                            setBroadcastStatus("Initiating broadcast sequence...");
+                            
+                            try {
+                                const { error } = await supabase
+                                    .from('broadcasts')
+                                    .insert([{ message: broadcastMessage }]);
+                                
+                                if (error) throw error;
+                                setBroadcastStatus("✅ Broadcast queued! Bot is sending...");
+                                setBroadcastMessage("");
+                                setTimeout(() => setBroadcastStatus(""), 5000);
+                            } catch (err: any) {
+                                setBroadcastStatus("❌ Error: " + err.message);
+                            } finally {
+                                setIsBroadcasting(false);
+                            }
+                        }}
+                        disabled={!broadcastMessage.trim() || isBroadcasting}
+                        className="px-10 py-4 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:hover:bg-indigo-600 text-white font-black uppercase tracking-widest rounded-2xl transition-all shadow-xl shadow-indigo-600/20 active:scale-95 flex items-center gap-3"
+                    >
+                        {isBroadcasting ? (
+                            <span className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                        ) : (
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
+                        )}
+                        Transmit Broadcast
+                    </button>
+                </div>
+            </div>
         </div>
 
         <div className="glass rounded-[3rem] overflow-hidden border border-white/10">
