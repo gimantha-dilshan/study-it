@@ -24,6 +24,11 @@
     - **Smart Templates:** Pre-configured buttons for Updates, Maintenance, and News.
 - **📱 Mobile Optimized:** Manage your entire educational platform from any device, anywhere.
 
+### 🚀 Automated Student Onboarding (New)
+- **⚡ Instant Pro Activation:** As soon as a student registers on the web-app, the bot sends an immediate "Welcome to Pro" message on WhatsApp.
+- **🛠️ Self-Healing Catch-up:** If the bot goes offline, it automatically scans for missed registrations upon restart, ensuring no student is left behind.
+- **📊 Individual Analytics:** Deep-dive into any student's profile to see their 7-day engagement wave and message type breakdown (Texts vs. Voices vs. Images).
+
 ### ⚖️ Advanced Quota System
 - **🆓 Free Tier:** 5 successful AI inquiries per day for guests.
 - **💎 Pro Tier:** 100 successful AI inquiries per day for registered students.
@@ -100,10 +105,35 @@ CREATE TABLE broadcasts (
     status TEXT DEFAULT 'pending',
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- 4. Registration Events Table (NEW)
+CREATE TABLE registration_events (
+    id BIGSERIAL PRIMARY KEY,
+    jid TEXT,
+    status TEXT DEFAULT 'pending',
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
 ```
 
-### 2. Environment Variables (.env)
-Create a `.env` file in the **root** folder:
+### 2. Database Security (Mandatory RLS)
+To keep your student data safe, you MUST enable Row Level Security (RLS) in the Supabase SQL Editor:
+
+```sql
+-- Enable RLS
+ALTER TABLE users ENABLE ROW LEVEL SECURITY;
+ALTER TABLE registration_events ENABLE ROW LEVEL SECURITY;
+ALTER TABLE messages ENABLE ROW LEVEL SECURITY;
+ALTER TABLE broadcasts ENABLE ROW LEVEL SECURITY;
+
+-- Allow Website Registration
+CREATE POLICY "Allow public registration" ON users FOR ALL USING (true);
+CREATE POLICY "Allow registration signals" ON registration_events FOR INSERT WITH CHECK (true);
+
+-- (No policies needed for messages/broadcasts as the Bot bypasses RLS)
+```
+
+### 3. Environment Variables (.env)
+Create a `.env` file in the **root** folder (See `.env.example`):
 ```env
 GEMINI_API_KEY=your_google_ai_key
 ADMIN_NUMBER=your_whatsapp_number@s.whatsapp.net
@@ -111,11 +141,12 @@ SUPABASE_URL=your_project_url
 SUPABASE_KEY=your_service_role_key
 ```
 
-And a `.env.local` in the **web/** folder:
+And a `.env.local` in the **web/** folder (See `web/.env.example`):
 ```env
 NEXT_PUBLIC_SUPABASE_URL=your_project_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
 ADMIN_PASSCODE=your_secret_passcode
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 ```
 
 ### 3. Launch
