@@ -106,6 +106,8 @@ async function connectToWhatsApp() {
         const remoteJid = msg.key.remoteJid;
         const textMessage = msg.message.conversation || msg.message.extendedTextMessage?.text;
         const imageMessage = msg.message.imageMessage;
+        const audioMessage = msg.message.audioMessage;
+        const documentMessage = msg.message.documentMessage;
 
         try {
             // PHONE DETECTION (For LID Support)
@@ -157,6 +159,57 @@ async function connectToWhatsApp() {
 
                 await socket.sendMessage(remoteJid, { text: "Thinking about your image... 🧐" }, { quoted: msg });
                 const aiResponse = await askGemini(remoteJid, caption, [{ mimeType: 'image/jpeg', data: base64Image }]);
+
+                await incrementUsage(remoteJid);
+                await socket.sendMessage(remoteJid, { text: aiResponse }, { quoted: msg });
+
+            } else if (audioMessage) {
+                // Quota check for audio
+                if (!isAdmin && currentUsage >= limit) {
+                    const webUrl = "https://studyit-register.vercel.app/";
+                    await socket.sendMessage(remoteJid, {
+                        text: `⚠️ *Daily Limit Reached!* 🎓\n\nYou have used your *${limit}/${limit}* free messages for today.\n\n✨ *Want more?* Register for free on our website to get *${REGISTERED_LIMIT}* messages per day!\n\n🔗 *Register here:* ${webUrl}`
+                    }, { quoted: msg });
+                    return;
+                }
+
+                console.log(`Received voice note from ${remoteJid}`);
+                const stream = await downloadContentFromMessage(audioMessage, 'audio');
+                let buffer = Buffer.from([]);
+                for await (const chunk of stream) {
+                    buffer = Buffer.concat([buffer, chunk]);
+                }
+
+                const base64Audio = buffer.toString('base64');
+                await socket.sendMessage(remoteJid, { text: "Listening to your voice note... 👂" }, { quoted: msg });
+                
+                const aiResponse = await askGemini(remoteJid, "User sent a voice note. Listen and respond.", [{ mimeType: 'audio/ogg', data: base64Audio }]);
+
+                await incrementUsage(remoteJid);
+                await socket.sendMessage(remoteJid, { text: aiResponse }, { quoted: msg });
+
+            } else if (documentMessage && documentMessage.mimetype === 'application/pdf') {
+                // Quota check for documents
+                if (!isAdmin && currentUsage >= limit) {
+                    const webUrl = "https://studyit-register.vercel.app/";
+                    await socket.sendMessage(remoteJid, {
+                        text: `⚠️ *Daily Limit Reached!* 🎓\n\nYou have used your *${limit}/${limit}* free messages for today.\n\n✨ *Want more?* Register for free on our website to get *${REGISTERED_LIMIT}* messages per day!\n\n🔗 *Register here:* ${webUrl}`
+                    }, { quoted: msg });
+                    return;
+                }
+
+                console.log(`Received PDF from ${remoteJid}`);
+                const stream = await downloadContentFromMessage(documentMessage, 'document');
+                let buffer = Buffer.from([]);
+                for await (const chunk of stream) {
+                    buffer = Buffer.concat([buffer, chunk]);
+                }
+
+                const base64Pdf = buffer.toString('base64');
+                const caption = documentMessage.caption || "Analyze this PDF document.";
+
+                await socket.sendMessage(remoteJid, { text: "Reading your document... 📄" }, { quoted: msg });
+                const aiResponse = await askGemini(remoteJid, caption, [{ mimeType: 'application/pdf', data: base64Pdf }]);
 
                 await incrementUsage(remoteJid);
                 await socket.sendMessage(remoteJid, { text: aiResponse }, { quoted: msg });

@@ -46,6 +46,11 @@ export async function askGemini(jid, prompt, mimes = [], modelChoice = PRIMARY_M
 
 CRITICAL INSTRUCTION: You are communicating directly on WhatsApp. You MUST use WhatsApp's specific text formatting rules. NEVER use standard Markdown (do not use **, #, or ##).
 
+MULTIMODAL SUPPORT:
+- IMAGES: Analyze homework photos and provide step-by-step solutions.
+- AUDIO: Listen to voice notes carefully and respond to the student's questions.
+- PDF/DOCS: Read textbook pages or documents and summarize or explain specific parts.
+
 Follow these formatting rules strictly for every response:
 1. BOLD: Use a single asterisk on both sides of the text (e.g., *Heading* or *Important Term*). NEVER use double asterisks.
 2. ITALICS: Use an underscore on both sides (e.g., _concept_).
