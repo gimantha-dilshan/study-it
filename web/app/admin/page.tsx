@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@supabase/supabase-js";
+import { verifyAdminPasscode } from "./actions";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -24,19 +25,25 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     setMounted(true);
-    const savedAuth = localStorage.getItem("studyit_admin_auth");
-    if (savedAuth === process.env.NEXT_PUBLIC_ADMIN_PASSCODE) {
+    // Check if we have a success token in sessionStorage (not the actual password)
+    const isAdmin = sessionStorage.getItem("studyit_admin_verified");
+    if (isAdmin === "true") {
       setIsAuthorized(true);
     }
   }, []);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (passcode === process.env.NEXT_PUBLIC_ADMIN_PASSCODE) {
+    setError("");
+    
+    // Call the NEW secure server action
+    const result = await verifyAdminPasscode(passcode);
+    
+    if (result.success) {
       setIsAuthorized(true);
-      localStorage.setItem("studyit_admin_auth", passcode);
+      sessionStorage.setItem("studyit_admin_verified", "true");
     } else {
-      setError("Incorrect passcode. Access Denied.");
+      setError(result.error || "Incorrect passcode.");
     }
   };
 
@@ -137,7 +144,7 @@ export default function AdminDashboard() {
             </button>
             <button 
                 onClick={() => {
-                    localStorage.removeItem("studyit_admin_auth");
+                    sessionStorage.removeItem("studyit_admin_verified");
                     setIsAuthorized(false);
                 }}
                 className="px-6 py-3 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-xl border border-red-500/20 transition-all text-sm font-semibold"
