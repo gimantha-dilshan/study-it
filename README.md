@@ -1,6 +1,14 @@
 # Study-It: The Ultimate AI Educational Assistant 🎓🚀✨
 
-**Study-It** is a professional, multimodal WhatsApp educational platform designed to empower students with instant, high-quality learning assistance. Built with a "Student-First" philosophy, it combines the power of **Gemini 2.5 Flash** with a sleek, real-time **Admin Dashboard (V4)** for total educational control.
+![Version](https://img.shields.io/badge/Version-2.5_Stable-blue?style=for-the-badge&logo=github)
+![Node.js](https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)
+![Next.js](https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=nextdotjs&logoColor=white)
+![Supabase](https://img.shields.io/badge/Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)
+![Gemini AI](https://img.shields.io/badge/Gemini_AI-4285F4?style=for-the-badge&logo=google&logoColor=white)
+![WhatsApp](https://img.shields.io/badge/WhatsApp-25D366?style=for-the-badge&logo=whatsapp&logoColor=white)
+![License](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)
+
+**Study-It** is a professional, multimodal WhatsApp educational platform designed to empower students with instant, high-quality learning assistance. Built with a "Student-First" philosophy, it combines the power of **Gemini 2.0 Flash** (with 4-tier fallback) with a sleek, real-time **Admin Dashboard (V4)** for total educational control.
 
 ---
 
@@ -10,7 +18,9 @@
 - **📸 Smart OCR Analysis:** Send a photo of any math problem, science equation, or essay prompt. The bot provides step-by-step logic, not just answers.
 - **🎙️ AI Voice Partner:** Send a voice note asking a question. Study-It listens and responds with clear, structured explanations.
 - **📄 Document Mastery:** Upload PDF textbooks or study guides. The bot can summarize entire chapters or answer specific questions from the text.
-- **⚡ Reliability System:** Automated model fallback (Flash → Flash Lite) ensures the bot is always online, even during high API demand.
+- **⚡ Ultra-Reliable Fallback (Dual-API):** 
+    - **4-Tier Protection:** If the primary model fails, the bot cycles through a secondary model, and then repeats the *entire cycle* with a **Backup API Key**.
+    - **Automatic Key Rotation:** Ensures 100% up-time even if your main account hits its rate limit.
 
 ### 🛰️ Admin Command Center V4 (The Hub)
 - **💎 Glassmorphism UI:** A premium, translucent design with high-end micro-animations and a stunning "Live System Analysis" status indicator.
@@ -40,7 +50,8 @@
 
 ### Core Bot (Node.js)
 - **WhatsApp Engine:** `@whiskeysockets/baileys` (Multi-device support).
-- **AI Integration:** `@google/genai` (Gemini 2.5 SDK).
+- **AI Integration:** `@google/genai` (Dual-Account Key Rotation).
+- **Failover Logic:** 4-Step sequence (Primary-M1 → Primary-M2 → Backup-M1 → Backup-M2).
 - **Database:** Supabase (PostgreSQL) for user state and message persistence.
 
 ### Web Admin (Next.js 14)
@@ -136,6 +147,7 @@ CREATE POLICY "Allow registration signals" ON registration_events FOR INSERT WIT
 Create a `.env` file in the **root** folder (See `.env.example`):
 ```env
 GEMINI_API_KEY=your_google_ai_key
+GEMINI_API_KEY_2=your_backup_google_ai_key
 ADMIN_NUMBER=your_whatsapp_number@s.whatsapp.net
 SUPABASE_URL=your_project_url
 SUPABASE_KEY=your_service_role_key
@@ -167,6 +179,15 @@ npm run dev
 - **Stateless AI:** Messages are processed in real-time. History is retrieved sparingly to maintain privacy.
 - **Quota Protection:** Automated usage resets every midnight.
 - **Admin Isolation:** Login is protected by a server-side verified passcode.
+
+---
+
+## 🛡️ License
+Distributed under the **MIT License**. See `LICENSE` for more information.
+
+## 🤝 Contact
+**Gimantha Dilshan** - Developer
+Project Link: [https://github.com/your-username/study-it](https://github.com/your-username/study-it)
 
 ---
 
