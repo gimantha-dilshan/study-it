@@ -4,41 +4,34 @@ import { getChatHistory, saveMessage } from './database.js';
 
 dotenv.config();
 
-const client = new GoogleGenAI({
-    apiKey: process.env.GEMINI_API_KEY,
-});
+// Initialize two separate clients for high availability
+const primaryClient = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+const backupClient = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY_2 || process.env.GEMINI_API_KEY });
 
 const PRIMARY_MODEL = 'gemini-2.5-flash';
 const SECONDARY_MODEL = 'gemini-2.5-flash-lite';
 
-export async function askGemini(jid, prompt, mimes = [], modelChoice = PRIMARY_MODEL) {
-    try {
-        // Retrieve history from database
-        const history = await getChatHistory(jid, 10);
+export async function askGemini(jid, prompt, mimes = [], modelChoice = PRIMARY_MODEL, useBackupKey = false) {
+    const activeClient = useBackupKey ? backupClient : primaryClient;
 
-        // Prepare parts for the current message
+    try {
+        const history = await getChatHistory(jid, 10);
         const currentParts = [{ text: prompt }];
 
-        // Add images if any
         mimes.forEach(m => {
             currentParts.push({
                 inlineData: {
                     mimeType: m.mimeType,
-                    data: m.data // base64 string
+                    data: m.data 
                 }
             });
         });
 
-        const contents = [
-            ...history,
-            {
-                role: 'user',
-                parts: currentParts
-            }
-        ];
+        const contents = [...history, { role: 'user', parts: currentParts }];
 
-        console.log(`Asking Gemini (${modelChoice})...`);
-        const result = await client.models.generateContent({
+        console.log(`Asking Gemini [Model: ${modelChoice} | Key: ${useBackupKey ? 'BACKUP' : 'PRIMARY'}]...`);
+        
+        const result = await activeClient.models.generateContent({
             model: modelChoice,
             contents: contents,
             config: {
@@ -46,39 +39,44 @@ export async function askGemini(jid, prompt, mimes = [], modelChoice = PRIMARY_M
 
 CRITICAL INSTRUCTION: You are communicating directly on WhatsApp. You MUST use WhatsApp's specific text formatting rules. NEVER use standard Markdown (do not use **, #, or ##).
 
-MULTIMODAL SUPPORT:
-- IMAGES: Analyze homework photos and provide step-by-step solutions.
-- AUDIO: Listen to voice notes carefully and respond to the student's questions.
-- PDF/DOCS: Read textbook pages or documents and summarize or explain specific parts.
-
-Follow these formatting rules strictly for every response:
-1. BOLD: Use a single asterisk on both sides of the text (e.g., *Heading* or *Important Term*). NEVER use double asterisks.
-2. ITALICS: Use an underscore on both sides (e.g., _concept_).
-3. HEADINGS: Do not use # or ##. To create a heading, use bold text combined with an emoji (e.g., *📚 Step 1:*).
-4. LISTS: Use a hyphen and a space (- item) for bullet points. Use numbers (1. item) for ordered lists. 
-5. MATH & CODE: Use single backticks (\`x = 5\`) for inline math or code. Use triple backticks (\`\`\`code\`\`\`) for multi-line code or complex formulas.
-6. NO TABLES: WhatsApp does not support tables. Always convert tabular data into a clean, bulleted list.
-7. READABILITY: Keep paragraphs very short (1-2 sentences max). Always leave a blank line between paragraphs so it is easy to read on a mobile screen.
-8. TONE & EMOJIS: Be encouraging. Use emojis naturally (💡, ✍️, ✨, 🚀) to make the text engaging. For math or science, always explain the logic step-by-step.`,
+Follow these formatting rules strictly:
+1. BOLD: Use a single asterisk (*Text*).
+2. ITALICS: Use underscore (_text_).
+3. HEADINGS: Use bold + emoji (e.g., *📚 Step 1:*).
+4. READABILITY: Short paragraphs, blank lines between them.
+5. NO TABLES: Use bulleted lists.`,
             }
         });
 
-        const responseText = result.text;
-        return responseText;
+        return result.text;
+
     } catch (error) {
-        console.error(`Error with ${modelChoice}:`, error.message);
+        console.error(`Error with ${modelChoice} (${useBackupKey ? 'BACKUP' : 'PRIMARY'}):`, error.message);
 
-        // FALLBACK LOGIC: If the primary fails, try the secondary
-        if (modelChoice === PRIMARY_MODEL) {
-            console.log(`⚠️ Falling back to ${SECONDARY_MODEL}...`);
-            return await askGemini(jid, prompt, mimes, SECONDARY_MODEL);
+        // Sequence: 
+        // 1. (Primary Key, Primary Model) -> (Primary Key, Secondary Model)
+        if (!useBackupKey && modelChoice === PRIMARY_MODEL) {
+            console.log(`⚠️ Falling back to Secondary Model (Primary Key)...`);
+            return await askGemini(jid, prompt, mimes, SECONDARY_MODEL, false);
         }
 
-        // If even the secondary fails, throw the error
+        // 2. (Primary Key, Secondary Model) -> (Backup Key, Primary Model)
+        if (!useBackupKey && modelChoice === SECONDARY_MODEL && process.env.GEMINI_API_KEY_2) {
+            console.log(`🚨 PRIMARY API BLOCKED. Switching to BACKUP API KEY...`);
+            return await askGemini(jid, prompt, mimes, PRIMARY_MODEL, true);
+        }
+
+        // 3. (Backup Key, Primary Model) -> (Backup Key, Secondary Model)
+        if (useBackupKey && modelChoice === PRIMARY_MODEL) {
+            console.log(`⚠️ Falling back to Secondary Model (Backup Key)...`);
+            return await askGemini(jid, prompt, mimes, SECONDARY_MODEL, true);
+        }
+
+        // Final failure after cycling both keys and both models
         if (error.message?.includes('429')) {
-            console.error(`CRITICAL: Gemini Quota Exceeded for ${modelChoice}.`);
+             return "⚠️ *System Overload:* All my brains are currently cooling down from too many questions. Please try again in 5 minutes! 🧠💤";
         }
 
-        throw error; // Let index.js handle the user-facing error message
+        throw error;
     }
 }
