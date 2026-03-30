@@ -67,17 +67,22 @@ function printHeader() {
 }
 
 async function startBroadcastListener(socket) {
-    console.log(`${C.magenta}[BROADCAST]${C.reset} Global Listener initialized...`);
+    console.log(`${C.magenta}[BROADCAST]${C.reset} Initializing Global Listener...`);
 
-    // Subscribe to new rows in 'broadcasts' table
-    supabase
+    const channel = supabase
         .channel('broadcasts-realtime')
-        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'broadcasts' }, async (payload) => {
-            const { message, id } = payload.new;
-            console.log(`${C.magenta}[BROADCAST]${C.reset} Received new broadcast [ID: ${id}]`);
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'broadcasts' }, async (payload) => {
+            const { eventType, new: newRow } = payload;
+            
+            // Only process if it's a new insert OR an update specifically from 'pending' to something else (though bot handles its own updates)
+            if (eventType !== 'INSERT' && eventType !== 'UPDATE') return;
+            if (newRow.status !== 'pending') return;
+
+            const { message, id } = newRow;
+            console.log(`${C.magenta}[BROADCAST]${C.reset} Processing ${eventType} [ID: ${id}]`);
 
             const users = await getAllUsers();
-            console.log(`🚀 Transmitting broadast to ${users.length} users...`);
+            console.log(`🚀 Transmitting broadcast to ${users.length} users...`);
 
             const officialMessage = `📢 *STUDY-IT OFFICIAL ANNOUNCEMENT* 🎓\n` +
                 `------------------------------------------\n\n` +
@@ -92,30 +97,35 @@ async function startBroadcastListener(socket) {
             for (const user of users) {
                 try {
                     if (hasImage) {
-                        await socket.sendMessage(user, {
-                            image: { url: imagePath },
-                            caption: officialMessage
-                        });
+                        await socket.sendMessage(user, { image: { url: imagePath }, caption: officialMessage });
                     } else {
                         await socket.sendMessage(user, { text: officialMessage });
                     }
                     successCount++;
-                    // Safe throttling to prevent WhatsApp bans
-                    await sleep(500);
+                    await sleep(500); // Throttling
                 } catch (err) {
                     console.error(`Failed to broadcast to ${user}:`, err);
                 }
             }
 
-            // Update status in DB
             await supabase.from('broadcasts').update({ status: 'sent' }).eq('id', id);
             console.log(`✅ Broadcast [ID: ${id}] completed! (${successCount}/${users.length} sent)`);
-        })
-        .subscribe();
+        });
+
+    channel.subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+            console.log(`${C.green}[DATABASE]${C.reset} Broadcast Channel: ${C.bold}READY${C.reset}`);
+        } else if (status === 'CLOSED') {
+            console.log(`${C.red}[DATABASE]${C.reset} Broadcast Channel: ${C.bold}CLOSED${C.reset}`);
+        } else if (status === 'CHANNEL_ERROR') {
+            console.error(`${C.red}[DATABASE]${C.reset} Broadcast Channel: ${C.bold}SUBSCRIPTION ERROR${C.reset}`);
+            console.log('Tip: Make sure "Realtime" is enabled for the "broadcasts" table in your Supabase replication settings!');
+        }
+    });
 }
 
 async function startRegistrationListener(socket) {
-    console.log(`${C.magenta}[REGISTRATION]${C.reset} Listener initialized...`);
+    console.log(`${C.magenta}[REGISTRATION]${C.reset} Initializing Global Listener...`);
 
     // --- Catch-up: Process any pending registrations from when bot was offline ---
     const { data: pendingEvents } = await supabase
@@ -130,12 +140,29 @@ async function startRegistrationListener(socket) {
         }
     }
 
-    supabase
+    const channel = supabase
         .channel('registrations-realtime')
-        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'registration_events' }, async (payload) => {
-            await handleRegistrationEvent(socket, payload.new);
-        })
-        .subscribe();
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'registration_events' }, async (payload) => {
+            const { eventType, new: newRow } = payload;
+            
+            // Only process if it's a new insert OR an update specifically from 'pending' to something else
+            if (eventType !== 'INSERT' && eventType !== 'UPDATE') return;
+            if (newRow.status !== 'pending') return;
+
+            console.log(`${C.magenta}[REGISTRATION]${C.reset} Processing ${eventType} for: ${newRow.jid}`);
+            await handleRegistrationEvent(socket, newRow);
+        });
+
+    channel.subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+            console.log(`${C.green}[DATABASE]${C.reset} Registration Channel: ${C.bold}READY${C.reset}`);
+        } else if (status === 'CLOSED') {
+            console.log(`${C.red}[DATABASE]${C.reset} Registration Channel: ${C.bold}CLOSED${C.reset}`);
+        } else if (status === 'CHANNEL_ERROR') {
+            console.error(`${C.red}[DATABASE]${C.reset} Registration Channel: ${C.bold}SUBSCRIPTION ERROR${C.reset}`);
+            console.log('Tip: Make sure "Realtime" is enabled for the "registration_events" table in your Supabase replication settings!');
+        }
+    });
 }
 
 // Helper to handle the actual messaging and DB update
