@@ -150,7 +150,8 @@ Create a `.env` file in the **root** folder (See `.env.example`):
 ```env
 GEMINI_API_KEY=your_google_ai_key
 GEMINI_API_KEY_2=your_backup_google_ai_key
-ADMIN_NUMBER=your_whatsapp_number@s.whatsapp.net
+BOT_NUMBER=your_country_code_number_no_plus_signs # e.g. 94771234567
+ADMIN_NUMBER=your_country_code_number_no_plus_signs # e.g. 94771234567
 SUPABASE_URL=your_project_url
 SUPABASE_KEY=your_service_role_key
 ```
@@ -165,7 +166,7 @@ SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 
 ### 3. Launch
 ```bash
-# Start the WhatsApp Bot
+# Start the WhatsApp Bot (Now with automated BOT_NUMBER pairing)
 npm install
 node index.js
 
@@ -174,6 +175,16 @@ cd web
 npm install
 npm run dev
 ```
+
+---
+
+## ☁️ Server Deployment (Oracle Cloud / VPS)
+**Study-It** is optimized for headless hosting. When deploying to a server:
+1. Ensure `BOT_NUMBER` is set in your `.env`.
+2. Run `node index.js`. A large, green **Pairing Code** will be displayed in the terminal.
+3. Open WhatsApp on your phone > Linked Devices > Link with Phone Number.
+4. Enter the code shown in the terminal.
+5. Use `pm2` to keep the bot alive: `pm2 start index.js --name "study-it-bot"`
 
 ---
 
