@@ -168,7 +168,7 @@ async function startRegistrationListener(socket) {
 // Helper to handle the actual messaging and DB update
 async function handleRegistrationEvent(socket, event) {
     const { jid, id } = event;
-    console.log(`${C.magenta}[REGISTRATION]${C.reset} Processing: ${jid}`);
+    console.log(`${C.magenta}[REGISTRATION]${C.reset} Processing ID: ${id} for: ${jid}`);
 
     const welcomePro = `🎉 *CONGRATULATIONS!* 🎓✨\n\n` +
         `You have successfully registered on our website. Your account has been upgraded to *PRO TIER!* 💎\n\n` +
@@ -178,10 +178,25 @@ async function handleRegistrationEvent(socket, event) {
         `Thank you for choosing Study-It. Let's get back to learning! 📚🎒🚀`;
 
     try {
-        await socket.sendMessage(jid, { text: welcomePro });
-        await supabase.from('registration_events').update({ status: 'processed' }).eq('id', id);
+        console.log(`[REGISTRATION] Attempting to send message to ${jid}...`);
+        
+        // Safety timeout: If the socket hangs for more than 10 seconds, skip the message
+        await Promise.race([
+            socket.sendMessage(jid, { text: welcomePro }),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('WhatsApp Send Timeout')), 10000))
+        ]);
+
+        console.log(`[REGISTRATION] Message successfully sent!`);
     } catch (err) {
-        console.error(`Failed to send registration message to ${jid}:`, err);
+        console.error(`[REGISTRATION] Error/Timeout during send:`, err.message || err);
+    } finally {
+        // ALWAYS mark as processed so we don't get stuck in a loop on every restart
+        try {
+            await supabase.from('registration_events').update({ status: 'processed' }).eq('id', id);
+            console.log(`[REGISTRATION] Database status updated to: PROCESSED`);
+        } catch (dbErr) {
+            console.error(`[REGISTRATION] Failed to update DB status:`, dbErr.message);
+        }
     }
 }
 

@@ -9,9 +9,7 @@ const supabaseKey = process.env.SUPABASE_KEY;
 // Initialize Supabase Client with explicit WebSocket for Node.js Realtime support
 export const supabase = createClient(supabaseUrl, supabaseKey, {
     realtime: {
-        config: {
-            websocket: WebSocket
-        }
+        websocket: WebSocket
     }
 });
 
