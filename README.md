@@ -164,8 +164,7 @@ SUPABASE_KEY=your_service_role_key
 
 And a `.env.local` in the **web/** folder (See `web/.env.example`):
 ```env
-NEXT_PUBLIC_SUPABASE_URL=your_project_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
+SUPABASE_URL=your_project_url
 ADMIN_PASSCODE=your_secret_passcode
 SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 ```
