@@ -146,6 +146,10 @@ CREATE POLICY "Allow registration signals" ON registration_events FOR INSERT WIT
 -- Without SELECT policies, the bot's Realtime listeners will silently receive nothing.
 CREATE POLICY "Allow realtime broadcast reads" ON broadcasts FOR SELECT USING (true);
 CREATE POLICY "Allow realtime registration reads" ON registration_events FOR SELECT USING (true);
+
+ALTER PUBLICATION supabase_realtime ADD TABLE broadcasts;
+ALTER PUBLICATION supabase_realtime ADD TABLE registration_events;
+
 ```
 
 ### 3. Environment Variables (.env)
