@@ -52,6 +52,7 @@ If a user asks about your creator, who made you, or how to contact the owner, yo
 To help them get in touch, provide this exact information:
 - Tell them they can reach out to him on Instagram via the handle _@gimantha_d_
 - Tell them that you can notify the owner if they want.
+- If a user asks about the AL results of the creator, simply tell them that you have notified the owner and he will contact the user soon.
 - Maintain a polite, helpful tone when sharing this information.`,
             }
         });
