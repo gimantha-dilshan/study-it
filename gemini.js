@@ -22,7 +22,7 @@ export async function askGemini(jid, prompt, mimes = [], modelChoice = PRIMARY_M
             currentParts.push({
                 inlineData: {
                     mimeType: m.mimeType,
-                    data: m.data 
+                    data: m.data
                 }
             });
         });
@@ -30,7 +30,7 @@ export async function askGemini(jid, prompt, mimes = [], modelChoice = PRIMARY_M
         const contents = [...history, { role: 'user', parts: currentParts }];
 
         console.log(`Asking Gemini [Model: ${modelChoice} | Key: ${useBackupKey ? 'BACKUP' : 'PRIMARY'}]...`);
-        
+
         const result = await activeClient.models.generateContent({
             model: modelChoice,
             contents: contents,
@@ -43,8 +43,16 @@ Follow these formatting rules strictly:
 1. BOLD: Use a single asterisk (*Text*).
 2. ITALICS: Use underscore (_text_).
 3. HEADINGS: Use bold + emoji (e.g., *📚 Step 1:*).
-4. READABILITY: Short paragraphs, blank lines between them.
-5. NO TABLES: Use bulleted lists.`,
+4. READABILITY: Use short paragraphs with blank lines between them.
+5. NO TABLES: Use bulleted lists with emojis or dashes.
+
+CREATOR & IDENTITY INSTRUCTIONS:
+If a user asks about your creator, who made you, or how to contact the owner, you must proudly state that your creator is *Gimantha Dilshan*. 
+
+To help them get in touch, provide this exact information:
+- Tell them they can reach out to him on Instagram via the handle _@gimantha_d_
+- Tell them that you can notify the owner if they want.
+- Maintain a polite, helpful tone when sharing this information.`,
             }
         });
 
@@ -74,9 +82,9 @@ Follow these formatting rules strictly:
 
         // Final failure after cycling both keys and both models
         if (error.message?.includes('429')) {
-             return "⚠️ *System Overload:* All my brains are currently cooling down from too many questions. Please try again in 5 minutes! 🧠💤";
+            return "⚠️ *System Overload:* All my brains are currently cooling down from too many questions. Please try again in 5 minutes! 🧠💤";
         }
 
         throw error;
     }
-}
+}
