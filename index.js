@@ -84,6 +84,13 @@ async function handleGlobalBroadcast(socket, broadcast) {
     console.log(`${C.magenta}[BROADCAST]${C.reset} Transmitting [ID: ${id}]...`);
 
     try {
+        // Connection Check: Ensure socket is initialized and likely connected
+        if (!socket || !socket.user) {
+            console.error(`${C.red}[BROADCAST]${C.reset} Critical: Socket not ready. Aborting.`);
+            processingBroadcasts.delete(id);
+            return;
+        }
+
         const users = (target_jids && Array.isArray(target_jids)) ? target_jids : await getAllUsers();
         console.log(`🚀 Sending broadcast to ${users.length} users... ${target_jids ? '(Targeted)' : '(Global)'}`);
 
@@ -99,20 +106,28 @@ async function handleGlobalBroadcast(socket, broadcast) {
         let successCount = 0;
         for (const user of users) {
             try {
+                // Formatting Check: Ensure JID has the correct domain
+                const jid = user.includes('@') ? user : `${user}@s.whatsapp.net`;
+                
+                console.log(`[BROADCAST] Processing: ${jid}...`);
                 if (hasImage) {
-                    await socket.sendMessage(user, { image: { url: imagePath }, caption: officialMessage });
+                    await socket.sendMessage(jid, { image: { url: imagePath }, caption: officialMessage });
                 } else {
-                    await socket.sendMessage(user, { text: officialMessage });
+                    await socket.sendMessage(jid, { text: officialMessage });
                 }
                 successCount++;
-                await sleep(500); // Delay between recipients to avoid bans
+                console.log(`${C.green}[BROADCAST] Sent successfully to ${jid}${C.reset}`);
+                
+                await sleep(1000); // Increased delay slightly to 1s for better stability during bursts
             } catch (err) {
-                console.error(`Failed to broadcast to ${user}:`, err);
+                console.error(`${C.red}Failed to broadcast to ${user}:${C.reset}`, err.message);
             }
         }
 
         await supabase.from('broadcasts').update({ status: 'sent' }).eq('id', id);
-        console.log(`✅ Broadcast [ID: ${id}] completed! (${successCount}/${users.length} transmitted)`);
+        
+        const summaryColor = successCount === users.length ? C.green : (successCount > 0 ? C.yellow : C.red);
+        console.log(`\n${summaryColor}✅ Broadcast [ID: ${id}] completed! (${successCount}/${users.length} transmitted)${C.reset}`);
     } catch (err) {
         console.error(`❌ Broadcast [ID: ${id}] failed:`, err.message);
     } finally {
