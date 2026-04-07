@@ -89,7 +89,7 @@ async function handleGlobalBroadcast(socket, broadcast) {
 
         const officialMessage = `📢 *STUDY-IT OFFICIAL ANNOUNCEMENT* 🎓\n` +
             `-------------------\n\n` +
-            `${message}\n\n` +
+            `${message}\n\n\n` +
             `-------------------\n` +
             `_Thank you for choosing Study-It_ 🚀`;
 
