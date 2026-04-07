@@ -22,6 +22,7 @@ export default function AdminDashboard() {
   
   const [broadcastMessage, setBroadcastMessage] = useState("");
   const [isBroadcasting, setIsBroadcasting] = useState(false);
+  const [selectedJids, setSelectedJids] = useState<string[]>([]);
   const [toast, setToast] = useState<{ message: string, type: 'success' | 'error' } | null>(null);
 
   // User Detail Modal State
@@ -127,6 +128,20 @@ export default function AdminDashboard() {
   const showToast = (message: string, type: 'success' | 'error') => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 4000);
+  };
+
+  const toggleUserSelection = (jid: string) => {
+    setSelectedJids(prev => 
+      prev.includes(jid) ? prev.filter(id => id !== jid) : [...prev, jid]
+    );
+  };
+
+  const toggleAllUsers = () => {
+    if (selectedJids.length === filteredUsers.length) {
+      setSelectedJids([]);
+    } else {
+      setSelectedJids(filteredUsers.map(u => u.jid));
+    }
   };
 
   if (!mounted) return null;
@@ -286,8 +301,16 @@ export default function AdminDashboard() {
           <div className="lg:col-span-8 space-y-6">
             <div className="glass rounded-[2.5rem] p-8 md:p-10 border border-white/10 space-y-8 bg-white/[0.02] shadow-xl">
               <div className="space-y-1">
-                <h3 className="text-3xl font-extrabold tracking-tight">Broadcast Center</h3>
-                <p className="text-gray-500 font-medium text-sm">Send a message to all students (Sends with official image)</p>
+                <div className="flex justify-between items-center">
+                    <h3 className="text-3xl font-extrabold tracking-tight">Broadcast Center</h3>
+                    {selectedJids.length > 0 && (
+                        <div className="bg-indigo-600/20 border border-indigo-500/30 px-3 py-1.5 rounded-xl flex items-center gap-2">
+                           <span className="text-[10px] font-black uppercase tracking-widest text-indigo-100">{selectedJids.length} Nodes Selected</span>
+                           <button onClick={() => setSelectedJids([])} className="text-indigo-400 hover:text-white text-[10px] font-black tracking-widest">CLEAR</button>
+                        </div>
+                    )}
+                </div>
+                <p className="text-gray-500 font-medium text-sm">Send a message to graduates (Sends with official image)</p>
               </div>
               <div className="space-y-6">
                 <div className="flex flex-wrap gap-2 text-white">
@@ -306,11 +329,16 @@ export default function AdminDashboard() {
                       if (!broadcastMessage.trim() || isBroadcasting) return;
                       setIsBroadcasting(true);
                       try {
-                        const result = await createBroadcast(passcode, broadcastMessage);
+                        const result = await createBroadcast(
+                            passcode, 
+                            broadcastMessage, 
+                            selectedJids.length > 0 ? selectedJids : null
+                        );
                         if (!result.success) throw new Error(result.error);
                         
                         showToast(`Broadcast queued [ID: ${result.data.id}]`, "success");
                         setBroadcastMessage(""); 
+                        setSelectedJids([]);
                         fetchData();
                       } catch (err: any) { 
                         showToast("Error: " + err.message, "error"); 
@@ -321,7 +349,7 @@ export default function AdminDashboard() {
                     disabled={!broadcastMessage.trim() || isBroadcasting}
                     className="w-full md:w-auto px-10 py-5 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-bold rounded-2xl transition-all shadow-xl shadow-indigo-600/30 active:scale-95"
                   >
-                    {isBroadcasting ? "Transmitting..." : "Send Global Broadcast"}
+                    {isBroadcasting ? "Transmitting..." : selectedJids.length > 0 ? `Send Targeted (${selectedJids.length})` : "Send Global Broadcast"}
                   </button>
                 </div>
               </div>
@@ -347,14 +375,37 @@ export default function AdminDashboard() {
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left">
-              <thead><tr className="border-b border-white/10 bg-white/[0.02] text-gray-500 text-[10px] font-bold uppercase tracking-widest"><th className="px-10 py-6">ID Node</th><th className="px-10 py-6">Tier</th><th className="px-10 py-6">Usage</th><th className="px-10 py-6 hidden md:table-cell">Created</th></tr></thead>
+              <thead>
+                <tr className="border-b border-white/10 bg-white/[0.02] text-gray-500 text-[10px] font-bold uppercase tracking-widest">
+                  <th className="px-6 py-6 w-12 text-center">
+                    <input 
+                      type="checkbox" 
+                      className="w-4 h-4 rounded border-white/10 bg-white/5 accent-indigo-500"
+                      checked={selectedJids.length > 0 && selectedJids.length === filteredUsers.length}
+                      onChange={toggleAllUsers}
+                    />
+                  </th>
+                  <th className="px-10 py-6">ID Node</th>
+                  <th className="px-10 py-6">Tier</th>
+                  <th className="px-10 py-6">Usage</th>
+                  <th className="px-10 py-6 hidden md:table-cell">Created</th>
+                </tr>
+              </thead>
               <tbody className="divide-y divide-white/5">
                 {filteredUsers.map((user) => {
                   const limit = user.is_registered ? 100 : 5;
                   const usagePercent = Math.min((user.daily_usage / limit) * 100, 100);
                   return (
-                    <tr key={user.jid} onClick={() => fetchUserDetail(user)} className="hover:bg-white/[0.04] cursor-pointer transition-all group">
-                      <td className="px-10 py-6">
+                    <tr key={user.jid} className={`hover:bg-white/[0.04] cursor-pointer transition-all group ${selectedJids.includes(user.jid) ? 'bg-indigo-600/5' : ''}`}>
+                      <td className="px-6 py-6 text-center" onClick={(e) => e.stopPropagation()}>
+                        <input 
+                          type="checkbox" 
+                          className="w-4 h-4 rounded border-white/10 bg-white/5 accent-indigo-500"
+                          checked={selectedJids.includes(user.jid)}
+                          onChange={() => toggleUserSelection(user.jid)}
+                        />
+                      </td>
+                      <td className="px-10 py-6" onClick={() => fetchUserDetail(user)}>
                         <div className="flex items-center gap-4 text-white">
                           <div className="w-12 h-12 rounded-2xl bg-indigo-600/10 flex items-center justify-center text-xl font-bold border border-white/5 group-hover:scale-105 transition-transform">{user.name ? user.name[0].toUpperCase() : "?"}</div>
                           <div>

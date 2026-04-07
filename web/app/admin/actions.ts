@@ -71,7 +71,7 @@ export async function getAdminUserMessages(passcode: string, jid: string) {
   }
 }
 
-export async function createBroadcast(passcode: string, message: string) {
+export async function createBroadcast(passcode: string, message: string, targetJids: string[] | null = null) {
   const secret = process.env.ADMIN_PASSCODE;
   if (!secret || passcode !== secret) {
     return { success: false, error: "Unauthorized" };
@@ -80,7 +80,7 @@ export async function createBroadcast(passcode: string, message: string) {
   try {
     const { data, error } = await supabaseAdmin
       .from("broadcasts")
-      .insert([{ message, status: "pending" }])
+      .insert([{ message, status: "pending", target_jids: targetJids }])
       .select()
       .single();
 

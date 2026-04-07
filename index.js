@@ -75,7 +75,7 @@ function printHeader() {
 }
 
 async function handleGlobalBroadcast(socket, broadcast) {
-    const { message, id } = broadcast;
+    const { message, id, target_jids } = broadcast;
 
     // Dedup: Skip if already being processed by another trigger
     if (processingBroadcasts.has(id)) return;
@@ -84,8 +84,8 @@ async function handleGlobalBroadcast(socket, broadcast) {
     console.log(`${C.magenta}[BROADCAST]${C.reset} Transmitting [ID: ${id}]...`);
 
     try {
-        const users = await getAllUsers();
-        console.log(`🚀 Sending broadcast to ${users.length} users...`);
+        const users = (target_jids && Array.isArray(target_jids)) ? target_jids : await getAllUsers();
+        console.log(`🚀 Sending broadcast to ${users.length} users... ${target_jids ? '(Targeted)' : '(Global)'}`);
 
         const officialMessage = `📢 *STUDY-IT OFFICIAL ANNOUNCEMENT* 🎓\n` +
             `------------------------------------------\n\n` +
