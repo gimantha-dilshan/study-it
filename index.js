@@ -88,9 +88,9 @@ async function handleGlobalBroadcast(socket, broadcast) {
         console.log(`🚀 Sending broadcast to ${users.length} users... ${target_jids ? '(Targeted)' : '(Global)'}`);
 
         const officialMessage = `📢 *STUDY-IT OFFICIAL ANNOUNCEMENT* 🎓\n` +
-            `-------------------\n\n` +
+            `----------------------\n\n` +
             `${message}\n\n\n` +
-            `-------------------\n` +
+            `----------------------\n` +
             `_Thank you for choosing Study-It_ 🚀`;
 
         const imagePath = './announcement.jpg';
