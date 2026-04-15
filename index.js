@@ -98,9 +98,21 @@ function printHeader() {
 async function handleGlobalBroadcast(socket, broadcast) {
     const { message, id, target_jids } = broadcast;
 
-    // Dedup: Skip if already being processed by another trigger
+    // Dedup: Skip if already being processed in memory
     if (processingBroadcasts.has(id)) return;
     processingBroadcasts.add(id);
+
+    // Safety check: Ensure it wasn't already processed by fallback polling
+    try {
+        const { data: dbCheck } = await supabase.from('broadcasts').select('status').eq('id', id).single();
+        if (dbCheck && dbCheck.status !== 'pending') {
+            console.log(`${C.yellow}[BROADCAST]${C.reset} Skip [ID: ${id}] (Already sent via fallback)`);
+            processingBroadcasts.delete(id);
+            return;
+        }
+    } catch (err) {
+        console.error("DB check failed, proceeding anyway.");
+    }
 
     console.log(`${C.magenta}[BROADCAST]${C.reset} Transmitting [ID: ${id}]...`);
 
@@ -239,9 +251,21 @@ async function listenToRedisQueues(socket) {
 async function handleRegistrationEvent(socket, event) {
     const { jid, id } = event;
 
-    // Dedup: Skip if already being processed by another trigger
+    // Dedup: Skip if already being processed in memory
     if (processingRegistrations.has(id)) return;
     processingRegistrations.add(id);
+
+    // Safety check: Ensure it wasn't already processed by fallback polling
+    try {
+        const { data: dbCheck } = await supabase.from('registration_events').select('status').eq('id', id).single();
+        if (dbCheck && dbCheck.status !== 'pending') {
+            console.log(`${C.yellow}[REGISTRATION]${C.reset} Skip ID: ${id} (Already sent via fallback)`);
+            processingRegistrations.delete(id);
+            return;
+        }
+    } catch (err) {
+        console.error("DB check failed, proceeding anyway.");
+    }
 
     console.log(`${C.magenta}[REGISTRATION]${C.reset} Processing ID: ${id} for: ${jid}`);
 
