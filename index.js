@@ -143,17 +143,38 @@ async function handleGlobalBroadcast(socket, broadcast) {
                 const jid = user.includes('@') ? user : `${user}@s.whatsapp.net`;
                 
                 console.log(`[BROADCAST] Processing: ${jid}...`);
-                if (hasImage) {
-                    await socket.sendMessage(jid, { image: { url: imagePath }, caption: officialMessage });
-                } else {
-                    await socket.sendMessage(jid, { text: officialMessage });
+
+                // 3-Attempt Retry Logic for WhatsApp Rate Limits
+                let sent = false;
+                let attempts = 0;
+                let lastError = null;
+
+                while (!sent && attempts < 3) {
+                    try {
+                        attempts++;
+                        if (hasImage) {
+                            await socket.sendMessage(jid, { image: { url: imagePath }, caption: officialMessage });
+                        } else {
+                            await socket.sendMessage(jid, { text: officialMessage });
+                        }
+                        sent = true; 
+                    } catch (err) {
+                        lastError = err;
+                        console.log(`${C.yellow}[BROADCAST] Attempt ${attempts} failed for ${jid}. Retrying in 2s...${C.reset}`);
+                        await sleep(2000); // Wait 2s before retry
+                    }
                 }
-                successCount++;
-                console.log(`${C.green}[BROADCAST] Sent successfully to ${jid}${C.reset}`);
+
+                if (sent) {
+                    successCount++;
+                    console.log(`${C.green}[BROADCAST] Sent successfully to ${jid}${C.reset}`);
+                } else {
+                    console.error(`${C.red}Failed to broadcast to ${user} after 3 attempts:${C.reset}`, lastError?.message);
+                }
                 
-                await sleep(1000); // Increased delay slightly to 1s for better stability during bursts
+                await sleep(1000); // 1s delay between different users to prevent socket flooding
             } catch (err) {
-                console.error(`${C.red}Failed to broadcast to ${user}:${C.reset}`, err.message);
+                console.error(`${C.red}Critical error processing user ${user}:${C.reset}`, err.message);
             }
         }
 
