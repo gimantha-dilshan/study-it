@@ -53,11 +53,12 @@
 - **AI Integration:** `@google/genai` (Dual-Account Key Rotation).
 - **Failover Logic:** 4-Step sequence (Primary-M1 → Primary-M2 → Backup-M1 → Backup-M2).
 - **Database:** Supabase (PostgreSQL) for user state and message persistence.
+- **Event Queue:** Upstash Redis (TCP `ioredis`) for 0-latency broadcast/registration processing.
 
 ### Web Admin (Next.js 14)
 - **Framework:** Next.js App Router (React).
 - **Styling:** Vanilla CSS + Tailwind for the Glassmorphism system.
-- **Realtime:** Supabase Subscription for live broadcast triggers.
+- **Realtime:** Upstash Redis REST API (`@upstash/redis`) for cross-server instant queueing.
 - **Security:** Server Actions for passcode verification (Passcode never exposed to client).
 
 ---
@@ -133,23 +134,15 @@ CREATE TABLE registration_events (
 To keep your student data safe, you MUST enable Row Level Security (RLS) in the Supabase SQL Editor:
 
 ```sql
--- Enable RLS on all tables
+-- Enable RLS on all tables to prevent unauthorized client access
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE registration_events ENABLE ROW LEVEL SECURITY;
 ALTER TABLE messages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE broadcasts ENABLE ROW LEVEL SECURITY;
 
--- No public policies on 'users' or 'messages' — all access goes through
--- Server Actions / Bot which use the service_role key (bypasses RLS).
-
--- Supabase Realtime requires SELECT policies to deliver postgres_changes events.
--- Without these, the bot's Realtime listeners will silently receive nothing.
-CREATE POLICY "Allow realtime broadcast reads" ON broadcasts FOR SELECT USING (true);
-CREATE POLICY "Allow realtime registration reads" ON registration_events FOR SELECT USING (true);
-
--- Enable Realtime replication on event-driven tables
-ALTER PUBLICATION supabase_realtime ADD TABLE broadcasts;
-ALTER PUBLICATION supabase_realtime ADD TABLE registration_events;
+-- No public policies are needed! 
+-- All database access is safely routed through the Next.js Server Actions 
+-- and the Node.js Bot backend securely using the Supabase Service Role key (which enforces server-side bypass).
 ```
 
 ### 3. Environment Variables (.env)
@@ -161,6 +154,7 @@ BOT_NUMBER=your_country_code_number_no_plus_signs # e.g. 94771234567
 ADMIN_NUMBER=your_country_code_number_no_plus_signs # e.g. 94771234567
 SUPABASE_URL=your_project_url
 SUPABASE_KEY=your_service_role_key
+REDIS_URL=your_upstash_tcp_url_starts_with_rediss # NEW: Upstash Redis TCP url
 ```
 
 And a `.env.local` in the **web/** folder (See `web/.env.example`):
@@ -168,6 +162,8 @@ And a `.env.local` in the **web/** folder (See `web/.env.example`):
 SUPABASE_URL=your_project_url
 ADMIN_PASSCODE=your_secret_passcode
 SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+UPSTASH_REDIS_REST_URL=your_upstash_rest_url      # NEW: Web API URL
+UPSTASH_REDIS_REST_TOKEN=your_upstash_rest_token  # NEW: Web API Token
 ```
 
 ### 3. Launch
