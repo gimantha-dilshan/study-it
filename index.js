@@ -68,7 +68,21 @@ const botSentIds = new Set();
 const redisUrl = process.env.REDIS_URL;
 let redisClient = null;
 if (redisUrl) {
-    redisClient = new Redis(redisUrl);
+    // Upstash handles idle connections by dropping them (ECONNRESET).
+    // ioredis requires maxRetriesPerRequest: null for blocking operations (BLPOP) to prevent crashes.
+    redisClient = new Redis(redisUrl, {
+        maxRetriesPerRequest: null,
+        tls: { rejectUnauthorized: false }, 
+        retryStrategy(times) {
+            return Math.min(times * 50, 2000); // Backoff reconnect smoothly
+        }
+    });
+
+    // Suppress noisy idle drop logs from Upstash
+    redisClient.on('error', (err) => {
+        if (err.message.includes('ECONNRESET')) return;
+        console.error(`${C.red}[REDIS CONNECTION ERROR]${C.reset}`, err.message);
+    });
 }
 
 // --- Professional Console Branding ---
