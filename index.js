@@ -12,6 +12,7 @@ import qrcode from 'qrcode-terminal';
 import pino from 'pino';
 import fs from 'fs';
 import readline from 'readline';
+import Redis from 'ioredis';
 import { askGemini } from './gemini.js';
 import {
     initDB,
@@ -63,6 +64,12 @@ const POLL_INTERVAL = 30000; // 30 seconds
 
 // Track bot-automated messages so we can distinguish them from manual owner messages
 const botSentIds = new Set();
+
+const redisUrl = process.env.REDIS_URL;
+let redisClient = null;
+if (redisUrl) {
+    redisClient = new Redis(redisUrl);
+}
 
 // --- Professional Console Branding ---
 function printHeader() {
@@ -154,36 +161,8 @@ async function pollPendingBroadcasts(socket) {
 }
 
 async function startBroadcastListener(socket) {
-    console.log(`${C.magenta}[BROADCAST]${C.reset} Initializing Global Listener...`);
-
-    // --- Catch-up: Process any pending broadcasts from when bot was offline ---
+    console.log(`${C.magenta}[BROADCAST]${C.reset} Initializing Polling Fallback...`);
     await pollPendingBroadcasts(socket);
-
-    // --- Realtime: Instant delivery when Supabase Realtime is properly configured ---
-    const channel = supabase
-        .channel('broadcasts-realtime')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'broadcasts' }, async (payload) => {
-            const { eventType, new: newRow } = payload;
-
-            if (eventType !== 'INSERT' && eventType !== 'UPDATE') return;
-            if (newRow.status !== 'pending') return;
-
-            console.log(`${C.magenta}[BROADCAST]${C.reset} Realtime ${eventType} [ID: ${newRow.id}]`);
-            await handleGlobalBroadcast(socket, newRow);
-        });
-
-    channel.subscribe((status, error) => {
-        if (status === 'SUBSCRIBED') {
-            console.log(`${C.green}[DATABASE]${C.reset} Broadcast Channel: ${C.bold}${C.green}READY (Realtime + Polling every ${POLL_INTERVAL / 1000}s)${C.reset}`);
-        } else if (status === 'CLOSED') {
-            console.log(`${C.red}[DATABASE]${C.reset} Broadcast Channel: ${C.bold}CLOSED${C.reset}`);
-        } else if (status === 'CHANNEL_ERROR') {
-            console.error(`${C.red}[DATABASE]${C.reset} Broadcast Channel: ${C.bold}ERROR${C.reset}`, error?.message || '');
-            console.log('Tip: Run this SQL in Supabase: ALTER PUBLICATION supabase_realtime ADD TABLE broadcasts;');
-        }
-    });
-
-    // --- Polling Fallback: Guarantees delivery even if Realtime is misconfigured ---
     setInterval(() => pollPendingBroadcasts(socket), POLL_INTERVAL);
 }
 
@@ -206,37 +185,40 @@ async function pollPendingRegistrations(socket) {
 }
 
 async function startRegistrationListener(socket) {
-    console.log(`${C.magenta}[REGISTRATION]${C.reset} Initializing Global Listener...`);
-
-    // --- Catch-up: Process any pending registrations from when bot was offline ---
+    console.log(`${C.magenta}[REGISTRATION]${C.reset} Initializing Polling Fallback...`);
     await pollPendingRegistrations(socket);
-
-    // --- Realtime: Instant delivery when Supabase Realtime is properly configured ---
-    const channel = supabase
-        .channel('registrations-realtime')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'registration_events' }, async (payload) => {
-            const { eventType, new: newRow } = payload;
-
-            if (eventType !== 'INSERT' && eventType !== 'UPDATE') return;
-            if (newRow.status !== 'pending') return;
-
-            console.log(`${C.magenta}[REGISTRATION]${C.reset} Realtime ${eventType} for: ${newRow.jid}`);
-            await handleRegistrationEvent(socket, newRow);
-        });
-
-    channel.subscribe((status, error) => {
-        if (status === 'SUBSCRIBED') {
-            console.log(`${C.green}[DATABASE]${C.reset} Registration Channel: ${C.bold}${C.green}READY (Realtime + Polling every ${POLL_INTERVAL / 1000}s)${C.reset}`);
-        } else if (status === 'CLOSED') {
-            console.log(`${C.red}[DATABASE]${C.reset} Registration Channel: ${C.bold}CLOSED${C.reset}`);
-        } else if (status === 'CHANNEL_ERROR') {
-            console.error(`${C.red}[DATABASE]${C.reset} Registration Channel: ${C.bold}ERROR${C.reset}`, error?.message || '');
-            console.log('Tip: Run this SQL in Supabase: ALTER PUBLICATION supabase_realtime ADD TABLE registration_events;');
-        }
-    });
-
-    // --- Polling Fallback: Guarantees delivery even if Realtime is misconfigured ---
     setInterval(() => pollPendingRegistrations(socket), POLL_INTERVAL);
+}
+
+async function listenToRedisQueues(socket) {
+    if (!redisClient) {
+        console.log(`${C.yellow}[REDIS]${C.reset} REDIS_URL not found. Skipping instant queue listeners.`);
+        return;
+    }
+    console.log(`${C.green}[REDIS]${C.reset} Instant Delivery Queue ${C.bold}${C.green}READY${C.reset}`);
+    
+    // Infinite loop blocking pop
+    while (true) {
+        try {
+            // Wait up to 0 seconds (infinite) for new items in either queue
+            const result = await redisClient.blpop('queue:broadcasts', 'queue:registrations', 0);
+            if (!result) continue;
+            
+            const [queueName, dataString] = result;
+            const data = JSON.parse(dataString);
+            
+            if (queueName === 'queue:broadcasts') {
+                console.log(`${C.magenta}[REDIS]${C.reset} Instant Broadcast received!`);
+                await handleGlobalBroadcast(socket, data);
+            } else if (queueName === 'queue:registrations') {
+                console.log(`${C.magenta}[REDIS]${C.reset} Instant Registration received!`);
+                await handleRegistrationEvent(socket, data);
+            }
+        } catch (err) {
+            console.error(`${C.red}[REDIS ERROR]${C.reset}:`, err.message);
+            await sleep(5000); // 5 second backoff on error
+        }
+    }
 }
 
 // Helper to handle the actual messaging and DB update
@@ -363,6 +345,7 @@ async function connectToWhatsApp() {
             setTimeout(() => {
                 startBroadcastListener(socket);
                 startRegistrationListener(socket);
+                listenToRedisQueues(socket);
             }, 2000);
         }
     });

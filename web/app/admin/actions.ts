@@ -1,12 +1,15 @@
 "use server";
 
 import { createClient } from "@supabase/supabase-js";
+import { Redis } from "@upstash/redis";
 
 // Server-side admin client (bypasses RLS)
 const supabaseAdmin = createClient(
   process.env.SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
+
+const redis = Redis.fromEnv();
 
 export async function verifyAdminPasscode(input: string) {
   const secret = process.env.ADMIN_PASSCODE;
@@ -85,6 +88,13 @@ export async function createBroadcast(passcode: string, message: string, targetJ
       .single();
 
     if (error) throw error;
+    
+    // Instant Delivery: Push to Upstash Redis queue.
+    try {
+      await redis.lpush("queue:broadcasts", JSON.stringify({ id: data.id, message, target_jids: targetJids }));
+    } catch (redisErr) {
+      console.warn("Redis push failed (relying on polling fallback):", redisErr);
+    }
     return { success: true, data };
   } catch (err: any) {
     console.error("Create Broadcast Error:", err);

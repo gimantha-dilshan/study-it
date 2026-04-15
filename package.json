@@ -17,6 +17,7 @@
     "@supabase/supabase-js": "^2.100.0",
     "@whiskeysockets/baileys": "^7.0.0-rc.9",
     "dotenv": "^17.3.1",
+    "ioredis": "^5.10.1",
     "mime-types": "^3.0.2",
     "pino": "^10.3.1",
     "qrcode-terminal": "^0.12.0",
