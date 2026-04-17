@@ -85,6 +85,11 @@ if (redisUrl) {
     });
 }
 
+// Prevent duplicate listeners on Auto-reconnect
+let broadcastPollInterval = null;
+let registrationPollInterval = null;
+let isRedisListening = false;
+
 // --- Professional Console Branding ---
 function printHeader() {
     console.clear();
@@ -210,7 +215,9 @@ async function pollPendingBroadcasts(socket) {
 async function startBroadcastListener(socket) {
     console.log(`${C.magenta}[BROADCAST]${C.reset} Initializing Polling Fallback...`);
     await pollPendingBroadcasts(socket);
-    setInterval(() => pollPendingBroadcasts(socket), POLL_INTERVAL);
+    
+    if (broadcastPollInterval) clearInterval(broadcastPollInterval);
+    broadcastPollInterval = setInterval(() => pollPendingBroadcasts(socket), POLL_INTERVAL);
 }
 
 async function pollPendingRegistrations(socket) {
@@ -234,7 +241,9 @@ async function pollPendingRegistrations(socket) {
 async function startRegistrationListener(socket) {
     console.log(`${C.magenta}[REGISTRATION]${C.reset} Initializing Polling Fallback...`);
     await pollPendingRegistrations(socket);
-    setInterval(() => pollPendingRegistrations(socket), POLL_INTERVAL);
+    
+    if (registrationPollInterval) clearInterval(registrationPollInterval);
+    registrationPollInterval = setInterval(() => pollPendingRegistrations(socket), POLL_INTERVAL);
 }
 
 async function listenToRedisQueues(socket) {
@@ -242,6 +251,10 @@ async function listenToRedisQueues(socket) {
         console.log(`${C.yellow}[REDIS]${C.reset} REDIS_URL not found. Skipping instant queue listeners.`);
         return;
     }
+    
+    if (isRedisListening) return; // Prevent creating multiple infinite loops on reconnect
+    isRedisListening = true;
+
     console.log(`${C.green}[REDIS]${C.reset} Instant Delivery Queue ${C.bold}${C.green}READY${C.reset}`);
     
     // Infinite loop blocking pop
