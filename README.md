@@ -34,6 +34,11 @@
     - **Smart Templates:** Pre-configured buttons for Updates, Maintenance, and News.
 - **📱 Mobile Optimized:** Manage your entire educational platform from any device, anywhere.
 
+### 🎨 Premium Marketing Web-App (New)
+- **Glassy Aesthetic:** A sleek, fully animated Next.js landing page built with Tailwind, designed for maximum student conversion.
+- **Direct WhatsApp Funnel:** Includes a glowing WhatsApp button natively linked directly to `NEXT_PUBLIC_BOT_NUMBER` for instantaneous onboarding.
+- **Dedicated Flow:** Independent `/register` route allowing seamless upgrading to the Pro Tier with instant backend sync to the bot.
+
 ### 🚀 Automated Student Onboarding (New)
 - **⚡ Instant Pro Activation:** As soon as a student registers on the web-app, the bot sends an immediate "Welcome to Pro" message on WhatsApp.
 - **🛠️ Self-Healing Catch-up:** If the bot goes offline, it automatically scans for missed registrations upon restart, ensuring no student is left behind.
@@ -66,19 +71,22 @@
 ## 📁 Project Structure
 
 ```text
-study-it-v2/
-├── index.js             # Core Bot Engine & WhatsApp Gateway
-├── gemini.js            # AI Brain (Multimodal logic & Fallbacks)
-├── database.js          # Database Controller (Quotas, History, Stats)
-├── web/                 # Admin Dashboard (Next.js Project)
-│   ├── app/
-│   │   ├── admin/       # Dashboard V4 Implementation
-│   │   └── actions.ts   # Secure Server-side Authentication
-│   └── globals.css      # Premium Design Tokens & Animations
-├── announcement.jpg     # Official Multimedia Broadcast Asset
-├── auth_info_baileys/   # Persistent WhatsApp session data
-└── README.md            # This Manual
-```
+ study-it-v2/
+ ├── index.js             # Core Bot Engine & WhatsApp Gateway
+ ├── gemini.js            # AI Brain (Multimodal logic & Fallbacks)
+ ├── database.js          # Database Controller (Quotas, History, Stats)
+ ├── web/                 # Web App (Marketing Page & Admin Dashboard)
+ │   ├── app/
+ │   │   ├── admin/       # Dashboard V4 Implementation
+ │   │   ├── register/    # Direct Student Onboarding & Pro Registration
+ │   │   ├── page.tsx     # Premium Glassmorphism Product Landing Page
+ │   │   └── actions.ts   # Secure Server-side Authentication
+ │   ├── components/      # Modular UI Components (Hero, Navbar, Features)
+ │   └── globals.css      # Premium Design Tokens & Animations
+ ├── announcement.jpg     # Official Multimedia Broadcast Asset
+ ├── auth_info_baileys/   # Persistent WhatsApp session data
+ └── README.md            # This Manual
+ ```
 
 ---
 
@@ -164,6 +172,7 @@ ADMIN_PASSCODE=your_secret_passcode
 SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 UPSTASH_REDIS_REST_URL=your_upstash_rest_url      # NEW: Web API URL
 UPSTASH_REDIS_REST_TOKEN=your_upstash_rest_token  # NEW: Web API Token
+NEXT_PUBLIC_BOT_NUMBER=your_country_code_number_no_plus_signs # NEW: Frontend Bot Link
 ```
 
 ### 3. Launch
