@@ -4,6 +4,7 @@ import Hero from "../components/Hero";
 
 const Features = lazy(() => import("../components/Features"));
 const HowItWorks = lazy(() => import("../components/HowItWorks"));
+const Showcase = lazy(() => import("../components/Showcase"));
 const Pricing = lazy(() => import("../components/Pricing"));
 const Footer = lazy(() => import("../components/Footer"));
 
@@ -30,6 +31,9 @@ export default function LandingPage() {
       </Suspense>
       <Suspense fallback={<SectionFallback />}>
         <HowItWorks />
+      </Suspense>
+      <Suspense fallback={<SectionFallback />}>
+        <Showcase />
       </Suspense>
       <Suspense fallback={<SectionFallback />}>
         <Pricing />
