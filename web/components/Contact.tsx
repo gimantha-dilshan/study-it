@@ -83,8 +83,9 @@ export default function Contact() {
               <div className="space-y-2">
                 <h3 className="text-2xl font-bold text-white">Email Us</h3>
                 <p className="text-gray-400 font-medium">For support, enterprise inquiries, and partnership requests.</p>
-                <a href="mailto:support@study-it.ai" className="text-xl font-bold text-indigo-400 hover:text-indigo-300 transition-colors inline-block pt-2">
-                  support@study-it.ai
+                <a href="https://studyit-bot.vercel.app/" className="text-xl font-bold text-indigo-400 hover:text-indigo-300 transition-colors inline-block pt-2">
+                  Available Soon!
+                  {/* mailto:support@study-it.ai */}
                 </a>
               </div>
             </div>
