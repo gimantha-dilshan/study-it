@@ -29,8 +29,8 @@ export default function Showcase() {
 
   return (
     <section id="showcase" className="relative py-32 px-4 sm:px-6 lg:px-8 z-10 border-t border-white/5 overflow-hidden">
-      {/* Background Decor */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-indigo-600/5 rounded-full blur-[120px] pointer-events-none" />
+      {/* Background Decor - hidden on mobile */}
+      <div className="hidden md:block absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-indigo-600/5 rounded-full blur-[120px] pointer-events-none" />
 
       <div className="max-w-7xl mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
@@ -132,8 +132,8 @@ export default function Showcase() {
               </div>
             </motion.div>
 
-            {/* Decorative Glow */}
-            <div className="absolute -inset-10 bg-indigo-500/10 blur-[80px] rounded-full pointer-events-none -z-10" />
+            {/* Decorative Glow - hidden on mobile */}
+            <div className="hidden md:block absolute -inset-10 bg-indigo-500/10 blur-[80px] rounded-full pointer-events-none -z-10" />
           </div>
 
         </div>

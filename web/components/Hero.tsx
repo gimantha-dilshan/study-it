@@ -77,8 +77,8 @@ export default function Hero() {
           transition={{ duration: 0.6, ease: "easeOut", delay: 0.3 }}
           className="relative lg:h-[600px] flex items-center justify-center z-20"
         >
-          {/* Abstract glowing backdrop for the image */}
-          <div className="absolute inset-0 bg-gradient-to-tr from-indigo-600/30 to-purple-600/30 rounded-full blur-[100px] animate-pulse-slow" />
+          {/* Abstract glowing backdrop for the image - hidden on mobile to save GPU */}
+          <div className="hidden md:block absolute inset-0 bg-gradient-to-tr from-indigo-600/30 to-purple-600/30 rounded-full blur-[100px] animate-pulse-slow" />
 
           <div className="relative w-full max-w-lg aspect-square lg:aspect-auto lg:h-[90%] rounded-[3rem] glass-card overflow-hidden shadow-[0_0_80px_rgba(99,102,241,0.2)] border border-white/20 transform hover:scale-[1.02] transition-transform duration-500">
             {/* We use next/image. Ensure it handles the path correctly. */}
