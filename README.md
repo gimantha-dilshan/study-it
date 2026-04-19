@@ -8,6 +8,8 @@
 ![WhatsApp](https://img.shields.io/badge/WhatsApp-25D366?style=for-the-badge&logo=whatsapp&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)
 
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fgimantha-dilshan%2Fstudy-it&root-directory=web)
+
 **Study-It** is a professional, multimodal WhatsApp educational platform designed to empower students with instant, high-quality learning assistance. Built with a "Student-First" philosophy, it combines the power of **Gemini 2.0 Flash** (with 4-tier fallback) with a sleek, real-time **Admin Dashboard (V4)** for total educational control.
 
 ---
@@ -253,36 +255,12 @@ pm2 restart study-it
 
 ## 🌐 Web Hosting Guide (Frontend & Dashboard)
 
-The **Next.js web platform** (Marketing page, Registration, and Admin Dashboard) needs to be hosted separately. You have two professional options:
+The **Next.js web platform** (Marketing page, Registration, and Admin Dashboard) is optimized for [Vercel](https://vercel.com/). It's free, has global CDN performance, and handles SSL automatically.
 
-### Option 1: Vercel (Highly Recommended)
-Vercel is the natural home for Next.js. It's free, has global CDN performance, and handles SSL automatically.
 1. Create a [Vercel](https://vercel.com/) account and connect your GitHub repository.
 2. Set the **Root Directory** to `web`.
 3. Add all your environment variables from `web/.env.local` to the Vercel **Environment Variables** settings.
 4. Click **Deploy**. Your site is now live!
-
-### Option 2: VPS (Using PM2)
-If you want to host the web app on the same VPS as your bot to save costs:
-
-1. **Navigate to the web folder:**
-   ```bash
-   cd web
-   ```
-2. **Configure Production Environment:**
-   Create a `.env` file inside the `web` folder:
-   ```bash
-   nano .env
-   ```
-   *Paste your `web/.env.local` contents here, save and exit.*
-3. **Build & Start:**
-   ```bash
-   npm install
-   npm run build
-   pm2 start npm --name "study-it-web" -- start
-   ```
-4. **Accessing the Dashboard:**
-   Once running, your site will be available on port `3000`. You can use a reverse proxy like **Nginx** to map it to a domain with SSL.
 
 ---
 
