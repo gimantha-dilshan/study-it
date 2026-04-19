@@ -34,8 +34,11 @@
     - **Smart Templates:** Pre-configured buttons for Updates, Maintenance, and News.
 - **📱 Mobile Optimized:** Manage your entire educational platform from any device, anywhere.
 
-### 🎨 Premium Marketing Web-App (New)
-- **Glassy Aesthetic:** A sleek, fully animated Next.js landing page built with Tailwind, designed for maximum student conversion.
+### 🎨 Premium Marketing Web-App (Enhanced)
+- **Glassy Aesthetic:** A sleek, fully animated Next.js landing page built with Tailwind, optimized for both desktop and mobile performance.
+- **🖼️ Interactive Showcase:** High-fidelity "Live Preview" window showing real-world AI use cases with smooth transitions.
+- **📬 Contact & Support:** Integrated **Web3Forms** support for students to send suggestions, bug reports, and feedback directly.
+- **🚀 Mobile Optimized:** Drastically reduced GPU load by selectively hiding massive blurs on mobile, ensuring a silky-smooth scrolling experience.
 - **Direct WhatsApp Funnel:** Includes a glowing WhatsApp button natively linked directly to `NEXT_PUBLIC_BOT_NUMBER` for instantaneous onboarding.
 - **Dedicated Flow:** Independent `/register` route allowing seamless upgrading to the Pro Tier with instant backend sync to the bot.
 
@@ -81,7 +84,7 @@
  │   │   ├── register/    # Direct Student Onboarding & Pro Registration
  │   │   ├── page.tsx     # Premium Glassmorphism Product Landing Page
  │   │   └── actions.ts   # Secure Server-side Authentication
- │   ├── components/      # Modular UI Components (Hero, Navbar, Features)
+ │   ├── components/      # Modular UI (Hero, Navbar, Features, Showcase, Contact)
  │   └── globals.css      # Premium Design Tokens & Animations
  ├── announcement.jpg     # Official Multimedia Broadcast Asset
  ├── auth_info_baileys/   # Persistent WhatsApp session data
@@ -173,6 +176,7 @@ SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 UPSTASH_REDIS_REST_URL=your_upstash_rest_url      # NEW: Web API URL
 UPSTASH_REDIS_REST_TOKEN=your_upstash_rest_token  # NEW: Web API Token
 NEXT_PUBLIC_BOT_NUMBER=your_country_code_number_no_plus_signs # NEW: Frontend Bot Link
+NEXT_PUBLIC_WEB3FORMS_ACCESS_KEY=your_access_key            # NEW: Contact Support Key
 ```
 
 ### 3. Launch
