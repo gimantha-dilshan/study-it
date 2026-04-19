@@ -62,6 +62,7 @@
 - **Failover Logic:** 4-Step sequence (Primary-M1 → Primary-M2 → Backup-M1 → Backup-M2).
 - **Database:** Supabase (PostgreSQL) for user state and message persistence.
 - **Event Queue:** Upstash Redis (TCP `ioredis`) for 0-latency broadcast/registration processing.
+- **Contact Form** Web3Forms for contact section on website.
 
 ### Web Admin (Next.js 14)
 - **Framework:** Next.js App Router (React).
