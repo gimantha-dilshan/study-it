@@ -194,13 +194,58 @@ npm run dev
 
 ---
 
-## ☁️ Server Deployment (Oracle Cloud / VPS)
-**Study-It** is optimized for headless hosting. When deploying to a server:
-1. Ensure `BOT_NUMBER` is set in your `.env`.
-2. Run `node index.js`. A large, green **Pairing Code** will be displayed in the terminal.
-3. Open WhatsApp on your phone > Linked Devices > Link with Phone Number.
-4. Enter the code shown in the terminal.
-5. Use `pm2` to keep the bot alive: `pm2 start index.js --name "study-it-bot"`
+## ☁️ VPS Deployment Guide (Ubuntu / Oracle Cloud)
+
+Follow these exact steps to host **Study-It** on a professional Linux VPS.
+
+### 1. Update System & Install Dependencies
+```bash
+sudo apt update && sudo apt upgrade -y
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+sudo apt install -y nodejs git
+sudo npm install -g pm2
+```
+
+### 2. Verify Installation
+```bash
+node -v
+npm -v
+pm2 -v
+```
+
+### 3. Clone & Install
+```bash
+git clone https://github.com/gimantha-dilshan/study-it.git
+cd study-it
+npm install
+```
+
+### 4. Configure Environment (The Terminal Way)
+Because `.env` files contain sensitive keys, they are never uploaded to GitHub. You must create it manually on your server using the `nano` text editor:
+
+```bash
+nano .env
+```
+*Paste your environment variables (refer to `.env.example`), then press `CTRL+O`, `Enter`, and `CTRL+X` to save and exit.*
+
+### 5. Start the Bot & Pairing
+```bash
+# Start and name the process
+pm2 start index.js --name "study-it"
+
+# View logs to get your pairing code
+pm2 logs study-it
+```
+*Wait for the green **Pairing Code** to appear. Open WhatsApp on your phone > Linked Devices > Link with Phone Number and enter the code.*
+
+### 6. Management Commands
+```bash
+# To stop the bot
+pm2 stop study-it
+
+# To restart the bot
+pm2 restart study-it
+```
 
 ---
 
